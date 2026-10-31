@@ -4,44 +4,47 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Boîte à outils réseau</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b6e7f">
 <style>
-  :root { --bg:#e9f0f3; --card:#fff; --ink:#0f2230; --muted:#5b7080; --line:#c9d6dd; --accent:#0b6e7f; --accent-ink:#fff; --alert:#b3261e; --ok:#1b7f3b; }
+  :root { --bg:#e9f0f3; --card:#fff; --ink:#0f2230; --muted:#5b7080; --line:#c9d6dd; --accent:#0b6e7f; --accent-ink:#fff; --alert:#b3261e; --ok:#1b7f3b; --r:12px; --font:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#0c171e; --card:#12222c; --ink:#e6f0f3; --muted:#8aa2b0; --line:#25404e; --accent:#4fd1c5; --accent-ink:#062027; --alert:#ff8a80; --ok:#7ee2a0; }
   }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; line-height:1.5; min-height:100vh; padding:24px 16px 48px; }
-  main { max-width:680px; margin:0 auto; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); line-height:1.5; min-height:100vh; padding:24px 16px 48px; }
+  main { max-width:var(--w,680px); margin:0 auto; }
   h1 { font-size:1.5rem; letter-spacing:-.02em; margin:0; }
   .sub { color:var(--accent); font-weight:600; margin:16px 0 20px; }
   header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative; margin-top:8px; }
-  .burger { flex:0 0 auto; width:48px; height:48px; padding:0; display:grid; place-content:center; gap:5px; background:var(--card); border:1px solid var(--line); border-radius:12px; cursor:pointer; }
+  .burger { flex:0 0 auto; width:48px; height:48px; padding:0; display:grid; place-content:center; gap:5px; background:var(--card); border:1px solid var(--line); border-radius:var(--r); cursor:pointer; }
   .burger span { display:block; width:22px; height:2px; background:var(--ink); border-radius:2px; transition:transform .35s ease, opacity .25s ease; }
   .burger[aria-expanded=true] span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
   .burger[aria-expanded=true] span:nth-child(2) { opacity:0; }
   .burger[aria-expanded=true] span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
-  .menu { position:absolute; right:0; top:100%; margin-top:8px; width:min(150px,100%); background:color-mix(in srgb, var(--card) 40%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px; padding:4px; z-index:10; visibility:hidden; pointer-events:none; }
+  .menu { position:absolute; right:0; top:100%; margin-top:8px; width:min(210px,100%); background:color-mix(in srgb, var(--card) 92%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:var(--r); padding:4px; z-index:10; visibility:hidden; pointer-events:none; }
   .menu.open { visibility:visible; pointer-events:auto; }
   .menu { max-height:70vh; overflow-y:auto; }
   .menu .mh { margin:8px 10px 2px; font-size:.7rem; color:var(--muted); }
-  .menu button { display:block; width:100%; text-align:left; padding:7px 10px; font-size:.85rem; font-weight:600; color:var(--ink); background:transparent; border:0; border-radius:8px; cursor:pointer; opacity:0; transform:translateX(18px); transition:opacity .2s ease, transform .2s ease; }
+  .menu button { display:block; width:100%; text-align:left; padding:7px 10px; font-size:.85rem; font-weight:600; color:var(--ink); background:transparent; border:0; border-radius:calc(var(--r)*.7); cursor:pointer; opacity:0; transform:translateX(18px); transition:opacity .2s ease, transform .2s ease; }
   .menu.open button { opacity:1; transform:none; transition:opacity .5s ease, transform .5s ease; transition-delay:calc(min(var(--i), 8) * 150ms); }
   .menu button[aria-current=true] { background:var(--accent); color:var(--accent-ink); }
   @media (prefers-reduced-motion: reduce) {
-    .burger span, .menu button, .menu.open button { transition:none; transition-delay:0s; }
+    .burger span, .menu button, .menu.open button, .drawer { transition:none; transition-delay:0s; }
+    .ptr div { animation:none; }
   }
   .panel[hidden], .result[hidden] { display:none; }
   .hint { color:var(--muted); margin:0 0 12px; font-size:.95rem; }
   form { display:flex; gap:8px; flex-wrap:wrap; }
-  input, textarea { flex:1 1 220px; min-width:0; padding:14px; font-size:1rem; font-family:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  input, textarea { flex:1 1 220px; min-width:0; padding:14px; font-size:1rem; font-family:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:var(--r); }
   textarea { resize:vertical; }
-  button.primary, button.ghost { padding:14px 18px; font-size:1rem; font-weight:600; border-radius:10px; border:1px solid var(--accent); cursor:pointer; }
+  button.primary, button.ghost { padding:14px 18px; font-size:1rem; font-weight:600; border-radius:var(--r); border:1px solid var(--accent); cursor:pointer; }
   button.primary { background:var(--accent); color:var(--accent-ink); }
   button.ghost { background:transparent; color:var(--accent); }
   input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
   .status { margin:14px 0 0; min-height:1.5em; color:var(--muted); }
   .status.error { color:var(--alert); }
-  .result { margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .result { margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:20px; }
   .place { font-size:1.4rem; font-weight:700; margin:0; }
   .ipline { color:var(--muted); margin:2px 0 14px; word-break:break-all; }
   dl { display:grid; grid-template-columns:max-content 1fr; gap:8px 16px; margin:0; }
@@ -49,113 +52,151 @@
   dd { margin:0; word-break:break-word; white-space:pre-wrap; }
   .map { display:inline-block; margin-top:14px; color:var(--accent); font-weight:600; }
   footer { margin-top:28px; color:var(--muted); font-size:.875rem; }
+
+  html { font-size:var(--fs,100%); }
+  body.grad { background:linear-gradient(160deg, var(--bg), color-mix(in srgb, var(--accent) 22%, var(--bg))) fixed; }
+  .noanim *, .noanim *::before { transition:none !important; animation:none !important; }
+  header.top h1 { flex:1; text-align:center; font-size:1.25rem; cursor:pointer; }
+  .drawer { position:absolute; left:0; top:100%; margin-top:8px; width:min(300px,100%); max-height:75vh; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:14px; z-index:10; visibility:hidden; opacity:0; transform:translateX(-12px); transition:opacity .25s ease, transform .25s ease, visibility .25s; }
+  .drawer.open { visibility:visible; opacity:1; transform:none; }
+  .drawer h2 { font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:16px 0 8px; }
+  .drawer h2:first-child { margin-top:0; }
+  .drawer .ghost { width:100%; margin-top:16px; }
+  .drawer .hint { margin:10px 0 0; font-size:.8rem; }
+  .themes { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .themes button { display:flex; align-items:center; gap:8px; padding:8px; font:inherit; font-size:.8rem; font-weight:600; color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:calc(var(--r)*.7); cursor:pointer; text-align:left; }
+  .themes button[aria-pressed=true] { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+  .themes i { flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:1px solid var(--line); }
+  .opt { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:8px 0; font-size:.9rem; }
+  .opt input { accent-color:var(--accent); }
+  .opt input[type=color] { flex:0 0 48px; width:48px; height:34px; padding:2px; border-radius:calc(var(--r)*.5); }
+  .opt input[type=range] { flex:0 0 130px; padding:0; border:0; }
+  .opt input[type=checkbox] { flex:0 0 22px; width:22px; height:22px; padding:0; }
+  .opt select { flex:0 0 150px; padding:8px; font:inherit; font-size:.9rem; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:calc(var(--r)*.7); }
+  .ptr { display:flex; justify-content:space-between; align-items:flex-start; color:var(--accent); font-weight:700; font-size:.85rem; margin:-8px 0 8px; }
+  .ptr div { display:flex; flex-direction:column; gap:2px; animation:bob 1.4s ease-in-out infinite; }
+  .ptr div:first-child { align-items:flex-start; }
+  .ptr div:last-child { align-items:flex-end; }
+  .ptr svg { width:28px; height:34px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .ptr div:first-child svg { margin-left:10px; }
+  .ptr div:last-child svg { margin-right:10px; }
+  @keyframes bob { 50% { transform:translateY(-6px); } }
+  .grp { margin:12px 0; background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:2px 14px; }
+  .grp summary { cursor:pointer; font-weight:700; padding:12px 0; }
+  .grp summary small { color:var(--muted); font-weight:400; }
+  .grp button { display:block; width:100%; text-align:left; font:inherit; color:var(--ink); background:none; border:0; border-top:1px solid var(--line); padding:10px 0; cursor:pointer; }
+  .grp button[hidden] { display:none; }
+  #q { width:100%; margin:6px 0 10px; flex:none; }
+  #fav { background:none; border:0; color:var(--accent); font-size:1.3rem; cursor:pointer; padding:0 4px; vertical-align:middle; }
+  .chips button { margin:0 6px 6px 0; padding:8px 12px; border-radius:var(--r); border:1px solid var(--accent); background:transparent; color:var(--accent); font:inherit; font-weight:600; cursor:pointer; }
+  #quick h3 { font-size:.8rem; color:var(--muted); margin:10px 0 6px; }
+  .grp button b { display:block; color:var(--accent); }
+  .grp button span { color:var(--muted); font-size:.9rem; }
 </style>
 </head>
 <body>
 <main>
   <header class="top">
+    <button class="burger" id="cust" aria-label="Personnaliser le site" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
     <h1>Boîte à outils réseau</h1>
     <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
-    <nav class="menu" id="menu" aria-label="Catégories">
-      <button data-tab="ip" aria-current="true">IP</button>
-      <button data-tab="tel" aria-current="false">Téléphone</button>
-      <button data-tab="mail" aria-current="false">E-mail</button>
-      <button data-tab="dom" aria-current="false">Domaine</button>
-      <button data-tab="net" aria-current="false">Réseau</button>
-      <button data-tab="dev" aria-current="false">Appareil</button>
-      <button data-tab="url" aria-current="false">Lien (URL)</button>
-      <button data-tab="scan" aria-current="false">Scan de lien</button>
-      <button data-tab="enc" aria-current="false">Encodage</button>
-      <button data-tab="pwd" aria-current="false">Mot de passe</button>
-      <button data-tab="chk" aria-current="false">Test de force</button>
-      <button data-tab="tz" aria-current="false">Fuseaux horaires</button>
-      <button data-tab="col" aria-current="false">Couleur</button>
-      <button data-tab="txt" aria-current="false">Texte</button>
-    </nav>
+    <nav class="menu" id="menu" aria-label="Outils"></nav>
+    <aside class="drawer" id="drawer" aria-label="Personnalisation"></aside>
   </header>
-  <p class="sub" id="current">IP</p>
+  <p class="sub"><span id="current">Accueil</span> <button id="fav" type="button" aria-label="Ajouter aux favoris" hidden>☆</button></p>
 
-  <section class="panel" id="p-ip" role="tabpanel">
+  <section class="panel" id="p-home" role="tabpanel">
+    <div class="ptr"><div><svg viewBox="0 0 28 34" aria-hidden="true"><path d="M14 32V4M4 14L14 3l10 11"/></svg><span>Personnaliser</span></div><div><svg viewBox="0 0 28 34" aria-hidden="true"><path d="M14 32V4M4 14L14 3l10 11"/></svg><span>Toutes les options</span></div></div>
+    <p class="place">Bienvenue 👋</p>
+    <p class="hint">Cette boîte à outils réunit <b id="count">…</b> outils gratuits, sans inscription : réseau et sécurité, texte, calculs, convertisseurs, dates, outils de développeur, budget et petits jeux de hasard. Les calculs se font dans ton navigateur ; seuls les outils réseau (IP, domaine, e-mail, appareil, scan) interrogent des services externes.</p>
+    <p class="hint">Le menu à trois traits <b>à droite</b> liste tous les outils. Celui <b>à gauche</b> sert à personnaliser le site : thèmes, couleurs, police, taille du texte, arrondis, largeur, animations. Tu peux aussi toucher directement un outil ci-dessous.</p>
+    <p class="hint" id="tip">💡 <b>Astuce :</b> appuie sur <b>/</b> pour chercher, touche ☆ pour mettre un outil en favori, et installe le site sur ton écran d’accueil. <button type="button" class="ghost" id="tipx" style="padding:4px 10px;font-size:.85rem">Compris</button></p>
+    <input type="search" id="q" placeholder="Rechercher un outil…" aria-label="Rechercher un outil" autocomplete="off">
+    <div id="quick"></div>
+    <div id="homeList"></div>
+  </section>
+
+  <section class="panel" id="p-ip" role="tabpanel" hidden>
     <p class="hint">Localise une adresse IP publique : ville, pays, fournisseur d’accès.</p>
-    <form data-tool="ip"><input placeholder="Ex. 8.8.8.8 ou 2001:4860:4860::8888" aria-label="Adresse IP" autocomplete="off" spellcheck="false"><button class="primary">Tracer</button><button type="button" class="ghost" data-me>Ma propre IP</button></form>
+    <form novalidate data-tool="ip"><input placeholder="Ex. 8.8.8.8 ou 2001:4860:4860::8888" aria-label="Adresse IP" autocomplete="off" spellcheck="false"><button class="primary">Tracer</button><button type="button" class="ghost" data-me>Ma propre IP</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-tel" role="tabpanel" hidden>
     <p class="hint">Vérifie le format d’un numéro : pays, format international, type de ligne (précis pour la France).</p>
-    <form data-tool="tel"><input type="tel" placeholder="Ex. 06 12 34 56 78 ou +44 20 7946 0958" aria-label="Numéro de téléphone" autocomplete="off"><button class="primary">Analyser</button></form>
+    <form novalidate data-tool="tel"><input type="tel" placeholder="Ex. 06 12 34 56 78 ou +44 20 7946 0958" aria-label="Numéro de téléphone" autocomplete="off"><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-mail" role="tabpanel" hidden>
     <p class="hint">Contrôle une adresse e-mail : syntaxe, domaine, serveurs de courrier, adresse jetable.</p>
-    <form data-tool="mail"><input type="email" placeholder="nom@exemple.com" aria-label="Adresse e-mail" autocomplete="off" spellcheck="false"><button class="primary">Vérifier</button></form>
+    <form novalidate data-tool="mail"><input type="email" placeholder="nom@exemple.com" aria-label="Adresse e-mail" autocomplete="off" spellcheck="false"><button class="primary">Vérifier</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-dom" role="tabpanel" hidden>
     <p class="hint">Affiche les enregistrements DNS d’un domaine et ses dates d’enregistrement.</p>
-    <form data-tool="dom"><input placeholder="exemple.com" aria-label="Nom de domaine" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
+    <form novalidate data-tool="dom"><input placeholder="exemple.com" aria-label="Nom de domaine" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-net" role="tabpanel" hidden>
     <p class="hint">Convertit une IPv4 (décimal, hexadécimal, binaire) ou calcule un sous-réseau CIDR.</p>
-    <form data-tool="net"><input placeholder="192.168.1.10 ou 192.168.1.0/24" aria-label="IPv4 ou CIDR" autocomplete="off" spellcheck="false"><button class="primary">Calculer</button></form>
+    <form novalidate data-tool="net"><input placeholder="192.168.1.10 ou 192.168.1.0/24" aria-label="IPv4 ou CIDR" autocomplete="off" spellcheck="false"><button class="primary">Calculer</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-dev" role="tabpanel" hidden>
     <p class="hint">Ce que ton navigateur révèle de ton appareil et de ta connexion.</p>
-    <form data-tool="dev"><button class="primary">Analyser mon appareil</button></form>
+    <form novalidate data-tool="dev"><button class="primary">Analyser mon appareil</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-url" role="tabpanel" hidden>
     <p class="hint">Décompose un lien et repère les signes typiques d’un faux site.</p>
-    <form data-tool="url"><input placeholder="https://exemple.com/page?x=1" aria-label="Lien à analyser" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
+    <form novalidate data-tool="url"><input placeholder="https://exemple.com/page?x=1" aria-label="Lien à analyser" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-enc" role="tabpanel" hidden>
     <p class="hint">Convertit un texte en Base64, URL, hexadécimal, binaire et calcule ses empreintes SHA.</p>
-    <form data-tool="enc"><input placeholder="Texte à convertir" aria-label="Texte" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
+    <form novalidate data-tool="enc"><input placeholder="Texte à convertir" aria-label="Texte" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-pwd" role="tabpanel" hidden>
     <p class="hint">Génère un mot de passe aléatoire solide, directement dans ton navigateur.</p>
-    <form data-tool="pwd"><input type="number" inputmode="numeric" min="8" max="64" placeholder="Longueur (8 à 64, 16 par défaut)" aria-label="Longueur du mot de passe"><button class="primary">Générer</button></form>
+    <form novalidate data-tool="pwd"><input type="number" inputmode="numeric" min="8" max="64" placeholder="Longueur (8 à 64, 16 par défaut)" aria-label="Longueur du mot de passe"><button class="primary">Générer</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-scan" role="tabpanel" hidden>
     <p class="hint">Repère les signes d’un lien dangereux sans l’ouvrir, puis vérifie-le sur des scanners de référence.</p>
-    <form data-tool="scan"><input placeholder="Colle le lien suspect ici" aria-label="Lien suspect" autocomplete="off" spellcheck="false"><button class="primary">Scanner</button></form>
+    <form novalidate data-tool="scan"><input placeholder="Colle le lien suspect ici" aria-label="Lien suspect" autocomplete="off" spellcheck="false"><button class="primary">Scanner</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-chk" role="tabpanel" hidden>
     <p class="hint">Teste la solidité d’un mot de passe. Il reste dans ton navigateur et n’est jamais envoyé.</p>
-    <form data-tool="chk"><input type="password" placeholder="Mot de passe à tester" aria-label="Mot de passe à tester" autocomplete="off"><button class="primary">Tester</button></form>
+    <form novalidate data-tool="chk"><input type="password" placeholder="Mot de passe à tester" aria-label="Mot de passe à tester" autocomplete="off"><button class="primary">Tester</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-tz" role="tabpanel" hidden>
     <p class="hint">Affiche la même heure dans plusieurs villes. Laisse vide pour l’heure actuelle.</p>
-    <form data-tool="tz"><input type="datetime-local" aria-label="Date et heure"><button class="primary">Convertir</button></form>
+    <form novalidate data-tool="tz"><input type="datetime-local" aria-label="Date et heure"><button class="primary">Convertir</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-col" role="tabpanel" hidden>
     <p class="hint">Convertit une couleur entre HEX, RGB et HSL et donne son contraste.</p>
-    <form data-tool="col"><input placeholder="#4fd1c5 ou rgb(79, 209, 197)" aria-label="Couleur" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
+    <form novalidate data-tool="col"><input placeholder="#4fd1c5 ou rgb(79, 209, 197)" aria-label="Couleur" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-txt" role="tabpanel" hidden>
     <p class="hint">Compte les caractères, mots et phrases, et transforme le texte (majuscules, slug, inversé).</p>
-    <form data-tool="txt"><textarea rows="4" placeholder="Colle ton texte ici" aria-label="Texte à analyser"></textarea><button class="primary">Analyser</button></form>
+    <form novalidate data-tool="txt"><textarea rows="4" placeholder="Colle ton texte ici" aria-label="Texte à analyser"></textarea><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
@@ -173,13 +214,21 @@
     const r = $('.result', p); r.textContent = '';
     r.appendChild(mk('p', 'place', title));
     if (sub) r.appendChild(mk('p', 'ipline', sub));
-    const dl = mk('dl');
+    const dl = mk('dl'), imgs = [];
     rows.forEach(x => {
       if (x[1] === undefined || x[1] === null || x[1] === '') return;
+      if (x[0] === '__img') { imgs.push(x[1]); return; }
       dl.appendChild(mk('dt', '', x[0])); dl.appendChild(mk('dd', '', String(x[1])));
     });
     r.appendChild(dl);
+    imgs.forEach(u => { const im = mk('img'); im.src = u; im.alt = 'QR code'; im.style.cssText = 'display:block;margin:14px 0;max-width:100%;background:#fff;padding:8px;border-radius:8px'; r.appendChild(im); });
     if (link) { const a = mk('a', 'map', link[0]); a.href = link[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; r.appendChild(a); }
+    const cb = mk('button', 'ghost', 'Copier'); cb.type = 'button'; cb.style.cssText = 'margin-top:14px;padding:8px 14px;font-size:.9rem';
+    cb.addEventListener('click', () => {
+      const t = rows.filter(x => x[0] !== '__img' && x[1] !== undefined && x[1] !== null && x[1] !== '').map(x => x[0] + ' : ' + x[1]).join('\n');
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { cb.textContent = 'Copié ✓'; }, () => { cb.textContent = 'Copie impossible'; });
+    });
+    r.appendChild(cb);
     r.hidden = false;
   }
 
@@ -543,7 +592,7 @@
   const FD = d => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const draw = (k, n) => { const s = new Set(); while (s.size < k) s.add(ri(1, n)); return Array.from(s).sort((a, b) => a - b).join(' – '); };
   const csv = v => v.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-  const GT = 'Texte', GC = 'Calculs', GV = 'Convertisseurs', GD = 'Dates', GW = 'Web et dev', GX = 'Divers';
+  const GT = 'Texte', GC = 'Calculs', GV = 'Convertisseurs', GD = 'Dates', GW = 'Web et dev', GX = 'Divers', GS = 'Santé et budget', GK = 'Sécurité et médias';
 
   const EXTRA = [
     ['caesar', 'Chiffre de César', GT, 'Chiffre un texte par décalage de lettres.', 'texte | décalage (ex. bonjour | 3)', v => { const a = v.split('|'), n = (((a[1] ? N(a[1]) : 3) % 26) + 26) % 26; return [['Chiffré', CAE(a[0].trim(), n)], ['Déchiffré', CAE(a[0].trim(), 26 - n)]]; }],
@@ -600,22 +649,73 @@
     ['pick', 'Tirage au sort', GX, 'Choisit un élément au hasard dans une liste.', 'Ex. pizza, sushi, burger', v => { const a = csv(v); if (a.length < 2) throw Error('Entre au moins deux choix séparés par des virgules.'); return [['Tirage', a[ri(0, a.length - 1)]]]; }],
     ['shuf', 'Mélanger une liste', GX, 'Mélange l’ordre d’une liste.', 'Ex. Ana, Karim, Léa, Tom', v => { const a = csv(v); if (a.length < 2) throw Error('Entre au moins deux éléments séparés par des virgules.'); for (let i = a.length - 1; i > 0; i--) { const j = ri(0, i), t = a[i]; a[i] = a[j]; a[j] = t; } return [['Ordre', a.map((x, i) => (i + 1) + '. ' + x).join('\n')]]; }],
     ['loto', 'Tirage Loto', GX, 'Grille aléatoire : 5 numéros sur 49 et 1 numéro chance.', 'Appuie sur Valider', () => [['Numéros', draw(5, 49)], ['N° chance', ri(1, 10)]]],
-    ['euro', 'Tirage EuroMillions', GX, 'Grille aléatoire : 5 numéros sur 50 et 2 étoiles.', 'Appuie sur Valider', () => [['Numéros', draw(5, 50)], ['Étoiles', draw(2, 12)]]]
+    ['euro', 'Tirage EuroMillions', GX, 'Grille aléatoire : 5 numéros sur 50 et 2 étoiles.', 'Appuie sur Valider', () => [['Numéros', draw(5, 50)], ['Étoiles', draw(2, 12)]]],
+
+    ['bmi', 'IMC', GS, 'Indice de masse corporelle. Simple repère, pas un avis médical.', 'poids kg, taille cm (ex. 70, 175)', v => { const r = NS(v), h = r[1] / 100; if (!(r[0] > 0 && h > 0.5)) throw Error('Format : poids kg, taille cm (ex. 70, 175)'); const b = r[0] / (h * h); return [['IMC', fix(Math.round(b * 10) / 10)], ['Catégorie (OMS)', b < 18.5 ? 'Insuffisance pondérale' : b < 25 ? 'Corpulence normale' : b < 30 ? 'Surpoids' : 'Obésité']]; }],
+    ['tip', 'Pourboire et addition', GS, 'Pourboire et part de chacun (10 % et 1 personne par défaut).', 'montant, %, personnes (ex. 80, 10, 4)', v => { const r = NS(v), a = r[0], p = r[1] === undefined ? 10 : r[1], n = r[2] || 1; if (a === undefined) throw Error('Entre au moins le montant.'); const t = a * (1 + p / 100); return [['Pourboire', fix(a * p / 100)], ['Total', fix(t)], ['Par personne', fix(t / n)]]; }],
+    ['disc', 'Remise et soldes', GS, 'Prix final après une remise.', 'prix, remise % (ex. 80, 30)', v => { const r = NS(v); if (r[1] === undefined) throw Error('Format : prix, remise % (ex. 80, 30)'); return [['Économie', fix(r[0] * r[1] / 100)], ['Prix final', fix(r[0] * (1 - r[1] / 100))]]; }],
+    ['loan', 'Mensualité de prêt', GS, 'Mensualité et coût total d’un crédit à taux fixe.', 'capital, taux % annuel, années (ex. 200000, 3.5, 20)', v => { const r = NS(v), c = r[0], m = r[1] / 1200, n = r[2] * 12; if (!(c > 0 && n > 0 && m >= 0)) throw Error('Format : capital, taux %, années (ex. 200000, 3.5, 20)'); const p = m ? c * m / (1 - Math.pow(1 + m, -n)) : c / n, q = x => fix(Math.round(x * 100) / 100); return [['Mensualité', q(p)], ['Total remboursé', q(p * n)], ['Coût du crédit', q(p * n - c)]]; }],
+    ['pace', 'Allure de course', GS, 'Allure (min/km) et vitesse à partir d’une distance et d’un temps.', 'km, minutes (ex. 10, 52)', v => { const r = NS(v); if (!(r[0] > 0 && r[1] > 0)) throw Error('Format : distance km, durée min (ex. 10, 52)'); const s = Math.round(r[1] * 60 / r[0]); return [['Allure', Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s / km'], ['Vitesse', fix(r[0] / r[1] * 60) + ' km/h']]; }],
+    ['fuel', 'Consommation carburant', GS, 'Litres aux 100 km à partir d’un trajet.', 'km, litres (ex. 450, 28)', v => { const r = NS(v); if (!(r[0] > 0 && r[1] > 0)) throw Error('Format : km, litres (ex. 450, 28)'); return [['Consommation', fix(r[1] / r[0] * 100) + ' L / 100 km'], ['Distance par litre', fix(r[0] / r[1]) + ' km']]; }],
+
+    ['fact', 'Factorielle', GC, 'Calcule n! (jusqu’à 500).', 'Ex. 20', v => { const n = N(v); if (!Number.isInteger(n) || n < 0 || n > 500) throw Error('Entre un entier de 0 à 500.'); let f = 1n; for (let i = 2n; i <= BigInt(n); i++) f *= i; return [[n + '!', f.toString()]]; }],
+    ['ratio', 'Règle de trois', GC, 'a est à b ce que c est à ?', 'a, b, c (ex. 3, 12, 5)', v => { const r = NS(v); if (r.length < 3 || !r[0]) throw Error('Format : a, b, c (a différent de 0)'); return [['Résultat', fix(r[1] * r[2] / r[0])]]; }],
+    ['pow', 'Puissances et racines', GC, 'a puissance b, racine carrée et racine cubique.', 'a, b (ex. 2, 10)', v => { const r = NS(v), a = r[0], b = r[1] === undefined ? 2 : r[1]; if (a === undefined) throw Error('Format : a, b (ex. 2, 10)'); return [[a + ' ^ ' + b, fix(Math.pow(a, b))], ['Racine carrée', a < 0 ? 'Non réelle' : fix(Math.sqrt(a))], ['Racine cubique', fix(Math.cbrt(a))]]; }],
+
+    ['px', 'Pixels et rem', GV, 'Convertit px, rem et pt (base 16 px).', 'Ex. 24 px ou 1.5 rem', v => { const m = v.trim().match(/^(-?[\d.,]+)\s*(px|rem|em)$/i); if (!m) throw Error('Format : 24 px ou 1.5 rem'); const x = N(m[1]), px = /px/i.test(m[2]) ? x : x * 16; return [['Pixels', fix(px) + ' px'], ['rem / em', fix(px / 16) + ' rem'], ['Points', fix(px * 0.75) + ' pt']]; }],
+    ['pres', 'Pressions', GV, 'Unités : bar, Pa, kPa, hPa, atm, psi, mmHg.', 'Ex. 2 bar', conv({ bar: 1, Pa: 1e-5, kPa: 0.01, hPa: 0.001, atm: 1.01325, psi: 0.0689476, mmHg: 0.00133322 })],
+
+    ['cnt', 'Compte à rebours', GD, 'Temps restant (ou écoulé) jusqu’à une date.', 'AAAA-MM-JJ (ex. 2026-12-25)', v => { const d = DT(v), t = new Date(new Date().toDateString()), j = Math.round((d - t) / 864e5); return [['Date', FD(d)], [j >= 0 ? 'Dans' : 'Il y a', Math.abs(j) + ' jours (' + fix(Math.abs(j) / 7) + ' semaines)']]; }],
+    ['bday', 'Prochain anniversaire', GD, 'Jours avant ton prochain anniversaire.', 'AAAA-MM-JJ (naissance)', v => { const b = DT(v), t = new Date(new Date().toDateString()); if (b > t) throw Error('Cette date est dans le futur.'); const n = new Date(t.getFullYear(), b.getMonth(), b.getDate()); if (n < t) n.setFullYear(n.getFullYear() + 1); return [['Prochain', FD(n)], ['Dans', Math.round((n - t) / 864e5) + ' jours'], ['Âge à cette date', n.getFullYear() - b.getFullYear() + ' ans']]; }],
+    ['work', 'Jours ouvrés', GD, 'Compte les jours du lundi au vendredi entre deux dates (incluses).', 'AAAA-MM-JJ, AAAA-MM-JJ', v => { const r = L(v); if (r.length < 2) throw Error('Format : 2026-01-01, 2026-01-31'); let a = DT(r[0]), b = DT(r[1]); if (a > b) { const x = a; a = b; b = x; } const tot = Math.round((b - a) / 864e5) + 1; if (tot > 36600) throw Error('Intervalle trop grand.'); let o = 0; for (let i = 0; i < tot; i++) { const w = new Date(a.getFullYear(), a.getMonth(), a.getDate() + i).getDay(); if (w && w < 6) o++; } return [['Jours ouvrés', o], ['Jours de week-end', tot - o], ['Total', tot]]; }],
+
+    ['lorem', 'Lorem ipsum', GW, 'Génère du faux texte pour tes maquettes.', 'Nombre de mots (30 par défaut)', v => { const n = v.trim() ? N(v) : 30; if (!Number.isInteger(n) || n < 1 || n > 500) throw Error('Entre un nombre de mots de 1 à 500.'); const w = 'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat'.split(' '), o = Array.from({ length: n }, () => w[ri(0, w.length - 1)]).join(' '); return [['Texte', o[0].toUpperCase() + o.slice(1) + '.']]; }],
+    ['mac', 'Adresse MAC', GW, 'Valide une adresse MAC, la met en forme et donne son type.', 'Ex. 00:1A:2B:3C:4D:5E', v => { const h = v.replace(/[:\-.\s]/g, ''); if (!/^[0-9a-f]{12}$/i.test(h)) throw Error('Une adresse MAC compte 12 chiffres hexadécimaux (ex. 00:1A:2B:3C:4D:5E).'); const p = h.toUpperCase().match(/../g), f = parseInt(p[0], 16); return [['Deux-points', p.join(':')], ['Tirets', p.join('-')], ['Format Cisco', h.toLowerCase().match(/.{4}/g).join('.')], ['Diffusion', (f & 1) ? 'Multicast' : 'Unicast'], ['Administration', (f & 2) ? 'Locale' : 'Universelle (constructeur)'], ['Préfixe constructeur (OUI)', p.slice(0, 3).join(':')]]; }],
+
+    ['leet', 'Leet speak', GT, 'Transforme un texte en langage « 1337 ».', 'Ex. Elite hacker', v => [['1337', v.replace(/[aeiostl]/gi, c => ({ a: '4', e: '3', i: '1', o: '0', s: '5', t: '7', l: '1' })[c.toLowerCase()])]]],
+    ['sort', 'Trier une liste', GT, 'Trie des éléments par ordre alphabétique ou numérique.', 'Ex. poire, pomme, banane', v => { const a = csv(v); if (a.length < 2) throw Error('Entre au moins deux éléments séparés par des virgules.'); const num = a.every(x => !isNaN(Number(x.replace(',', '.')))), s = a.slice().sort(num ? (x, y) => N(x) - N(y) : (x, y) => x.localeCompare(y, 'fr')); return [['Croissant', s.join(', ')], ['Décroissant', s.slice().reverse().join(', ')]]; }],
+    ['revw', 'Inverser les mots', GT, 'Inverse l’ordre des mots, ou les lettres de chaque mot.', 'Ex. bonjour tout le monde', v => [['Ordre des mots', v.trim().split(/\s+/).reverse().join(' ')], ['Lettres de chaque mot', v.trim().split(/\s+/).map(w => Array.from(w).reverse().join('')).join(' ')]]],
+    ['t2b', 'Texte et binaire', GT, 'Texte vers binaire, ou binaire (octets de 8 bits) vers texte.', 'Ex. Salut ou 01001000 01101001', v => { const s = v.trim(); if (/^[01\s]+$/.test(s) && s.split(/\s+/).every(b => b.length === 8)) return [['Texte', new TextDecoder().decode(Uint8Array.from(s.split(/\s+/), b => parseInt(b, 2)))]]; return [['Binaire', Array.from(new TextEncoder().encode(s), b => b.toString(2).padStart(8, '0')).join(' ')]]; }],
+    ['anag', 'Anagrammes', GT, 'Vérifie si deux mots sont des anagrammes.', 'mot1, mot2 (ex. chien, niche)', v => { const r = L(v); if (r.length < 2) throw Error('Format : chien, niche'); const n = x => Array.from(x.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')).sort().join(''); return [['Anagrammes', n(r[0]) && n(r[0]) === n(r[1]) ? 'Oui' : 'Non']]; }],
+
+    ['pin', 'Code PIN aléatoire', GX, 'Code numérique de 4 à 8 chiffres (4 par défaut).', 'Longueur (ex. 6)', v => { const n = v.trim() ? N(v) : 4; if (!Number.isInteger(n) || n < 4 || n > 8) throw Error('Choisis une longueur entre 4 et 8.'); return [['Code PIN', Array.from({ length: n }, () => ri(0, 9)).join('')]]; }],
+    ['rcol', 'Couleur aléatoire', GX, 'Tire une couleur au hasard avec ses valeurs.', 'Appuie sur Valider', () => { const c = [ri(0, 255), ri(0, 255), ri(0, 255)]; return [['HEX', '#' + c.map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()], ['RGB', 'rgb(' + c.join(', ') + ')']]; }],
+    ['ball', 'Boule magique', GX, 'Pose une question fermée, la boule répond.', 'Ta question', () => { const a = ['Oui, sans aucun doute', 'C’est probable', 'Les signes disent oui', 'Redemande plus tard', 'Impossible de répondre maintenant', 'N’y compte pas', 'Ma réponse est non', 'Très douteux']; return [['Réponse', a[ri(0, a.length - 1)]]]; }],
+    ['card', 'Tirer une carte', GX, 'Tire une carte dans un jeu de 52.', 'Appuie sur Valider', () => [['Carte', ['As', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Valet', 'Dame', 'Roi'][ri(0, 12)] + ' de ' + ['cœur', 'carreau', 'trèfle', 'pique'][ri(0, 3)]]]],
+    ['rps', 'Pierre-feuille-ciseaux', GX, 'Joue contre l’ordinateur.', 'pierre, feuille ou ciseaux', v => { const o = ['pierre', 'feuille', 'ciseaux'], me = o.indexOf(v.trim().toLowerCase()); if (me < 0) throw Error('Écris pierre, feuille ou ciseaux.'); const pc = ri(0, 2); return [['Ton choix', o[me]], ['Ordinateur', o[pc]], ['Résultat', me === pc ? 'Égalité' : (me - pc + 3) % 3 === 1 ? 'Gagné !' : 'Perdu']]; }],
+
+    ['pwned', 'Mot de passe piraté ?', GK, 'Vérifie si un mot de passe est apparu dans des fuites (seuls 5 caractères de son empreinte sont envoyés).', 'Mot de passe à vérifier', v => { if (!v) throw Error('Entre un mot de passe.'); if (!(window.crypto && crypto.subtle)) throw Error('Nécessite HTTPS (ex. GitHub Pages).'); return crypto.subtle.digest('SHA-1', new TextEncoder().encode(v)).then(h => { const x = Array.from(new Uint8Array(h), c => c.toString(16).padStart(2, '0')).join('').toUpperCase(); return fetch('https://api.pwnedpasswords.com/range/' + x.slice(0, 5)).then(r => { if (!r.ok) throw Error('Service indisponible.'); return r.text(); }).then(t => { const m = t.split('\n').map(l => l.trim().split(':')).find(a => a[0] === x.slice(5)); return [['Résultat', m ? 'Trouvé dans ' + (+m[1]).toLocaleString('fr-FR') + ' fuites : change-le partout où tu l’utilises.' : 'Absent des fuites connues']]; }); }).catch(e => { throw Error(/Service/.test(e.message) ? e.message : 'Service injoignable.'); }); }],
+    ['phrase', 'Phrase de passe', GK, 'Mots aléatoires faciles à retenir (4 par défaut, de 3 à 10).', 'Nombre de mots (ex. 5)', v => { const n = v.trim() ? N(v) : 4; if (!Number.isInteger(n) || n < 3 || n > 10) throw Error('Choisis de 3 à 10 mots.'); const w = 'soleil montagne rivière nuage forêt orange cheval jardin lumière océan étoile pierre vent sable fleur tigre cuisine bateau fusée prairie volcan miroir cerise chemin éclair glacier horizon lanterne marais nuit plume quartz renard saphir tempête violon zèbre abricot balcon cactus dragon ermite falaise gazelle hibou igloo jasmin koala lagune moineau nectar opale panda quiche radis tulipe vallée yacht'.split(' '); return [['Phrase', Array.from({ length: n }, () => w[ri(0, w.length - 1)]).join('-')], ['Entropie', Math.round(n * Math.log2(w.length)) + ' bits (liste courte : pour un compte important, préfère l’outil Mot de passe)']]; }],
+    ['qr', 'QR code', GK, 'Crée un QR code. Le texte est envoyé au service qrserver.com.', 'Texte ou lien', v => { if (!v) throw Error('Entre un texte ou un lien.'); if (v.length > 500) throw Error('500 caractères maximum.'); const u = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(v); return [['__img', u], ['Lien de l’image', u]]; }],
+    ['tdiff', 'Comparer deux textes', GT, 'Mots ajoutés, retirés et similarité entre deux textes.', 'texte A | texte B', v => { const i = v.indexOf('|'); if (i < 0) throw Error('Format : texte A | texte B'); const w = x => x.toLowerCase().match(/\p{L}[\p{L}\p{N}']*/gu) || [], a = w(v.slice(0, i)), b = w(v.slice(i + 1)), A = new Set(a), B = new Set(b), u = new Set(a.concat(b)), c = Array.from(A).filter(x => B.has(x)); return [['Retirés (dans A seulement)', Array.from(A).filter(x => !B.has(x)).join(', ') || 'Aucun'], ['Ajoutés (dans B seulement)', Array.from(B).filter(x => !A.has(x)).join(', ') || 'Aucun'], ['Similarité', u.size ? Math.round(c.length / u.size * 100) + ' %' : '-']]; }],
+    ['curr', 'Devises', GC, 'Taux du jour de la Banque centrale européenne (service frankfurter.app).', 'Ex. 100 EUR USD', v => { const m = v.trim().toUpperCase().match(/^([\d.,]+)\s*([A-Z]{3})\s*(?:EN|TO|>)?\s*([A-Z]{3})$/); if (!m) throw Error('Format : 100 EUR USD'); const a = N(m[1]); return fetch('https://api.frankfurter.app/latest?amount=' + a + '&from=' + m[2] + '&to=' + m[3]).then(r => { if (!r.ok) throw Error('Devise non prise en charge.'); return r.json(); }).then(d => [[a + ' ' + m[2], fix(d.rates[m[3]]) + ' ' + m[3]], ['Date du taux', d.date]]).catch(e => { throw Error(/Devise/.test(e.message) ? e.message : 'Service injoignable.'); }); }],
+    ['cssg', 'Dégradé CSS', GW, 'Génère le code CSS d’un dégradé.', 'couleur1, couleur2, angle (ex. #ff6b6b, #4ecdc4, 135)', v => { const r = L(v); if (r.length < 2) throw Error('Format : #ff6b6b, #4ecdc4, 135'); return [['CSS', 'background: linear-gradient(' + (r[2] || 135) + 'deg, ' + r[0] + ', ' + r[1] + ');']]; }]
   ];
 
   (function () {
-    const mn = $('#menu'), ft = $('footer'); let last = '';
+    const mn = $('#menu'), ft = $('footer'), hl = $('#homeList'), GR = {}, GN = 'Réseau et sécurité', GP = 'Pratique';
+    const CORE = [['ip', 'IP', GN], ['tel', 'Téléphone', GN], ['mail', 'E-mail', GN], ['dom', 'Domaine', GN], ['net', 'Réseau', GN], ['dev', 'Appareil', GN], ['url', 'Lien (URL)', GN], ['scan', 'Scan de lien', GN], ['enc', 'Encodage', GN], ['pwd', 'Mot de passe', GN], ['chk', 'Test de force', GN], ['tz', 'Fuseaux horaires', GP], ['col', 'Couleur', GP], ['txt', 'Texte', GP]];
+    const REG = CORE.concat(EXTRA.map(x => [x[0], x[1], x[2]]));
+    REG.forEach(r => { (GR[r[2]] = GR[r[2]] || []).push(r); });
+    const mkb = (id, t) => { const b = mk('button', '', t); b.dataset.tab = id; b.setAttribute('aria-current', id === 'home' ? 'true' : 'false'); mn.appendChild(b); };
+    mkb('home', 'Accueil');
+    Object.keys(GR).forEach(g => { mn.appendChild(mk('p', 'mh', g)); GR[g].forEach(r => mkb(r[0], r[1])); });
     EXTRA.forEach(x => {
-      if (x[2] !== last) { last = x[2]; mn.appendChild(mk('p', 'mh', last)); }
-      const b = mk('button', '', x[1]); b.dataset.tab = x[0]; b.setAttribute('aria-current', 'false'); mn.appendChild(b);
       const sec = mk('section', 'panel'); sec.id = 'p-' + x[0]; sec.hidden = true; sec.setAttribute('role', 'tabpanel');
       const f = mk('form'), i = mk('input'), s = mk('p', 'status'), r = mk('div', 'result');
-      f.dataset.tool = x[0]; i.placeholder = x[4]; i.setAttribute('aria-label', x[1]); i.autocomplete = 'off'; i.spellcheck = false;
+      f.dataset.tool = x[0]; f.noValidate = true; i.placeholder = x[4]; i.setAttribute('aria-label', x[1]); i.autocomplete = 'off'; i.spellcheck = false;
       s.setAttribute('role', 'status'); s.setAttribute('aria-live', 'polite'); r.hidden = true;
       f.appendChild(i); f.appendChild(mk('button', 'primary', 'Valider'));
       sec.appendChild(mk('p', 'hint', x[3])); sec.appendChild(f); sec.appendChild(s); sec.appendChild(r);
       ft.parentNode.insertBefore(sec, ft);
     });
+    Object.keys(GR).forEach(g => {
+      const d = mk('details', 'grp'), sm = mk('summary', '', g + ' '); d.open = true;
+      sm.appendChild(mk('small', '', '· ' + GR[g].length + (GR[g].length > 1 ? ' outils' : ' outil'))); d.appendChild(sm);
+      GR[g].forEach(r => { const b = mk('button'); b.type = 'button'; b.dataset.go = r[0]; b.appendChild(mk('b', '', r[1])); b.appendChild(mk('span', '', $('#p-' + r[0] + ' .hint').textContent)); d.appendChild(b); });
+      hl.appendChild(d);
+    });
+    $('#count').textContent = REG.length;
   })();
 
   /* ---------- Câblage ---------- */
@@ -643,15 +743,134 @@
     burger.setAttribute('aria-expanded', open ? 'true' : 'false');
     burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
   };
-  burger.addEventListener('click', () => setMenu(!menu.classList.contains('open')));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
-  document.addEventListener('click', e => { if (!menu.contains(e.target) && !burger.contains(e.target)) setMenu(false); });
-  items.forEach(t => t.addEventListener('click', () => {
+  const cust = $('#cust'), dr = $('#drawer');
+  const setDr = open => {
+    dr.classList.toggle('open', open);
+    cust.setAttribute('aria-expanded', open ? 'true' : 'false');
+    cust.setAttribute('aria-label', open ? 'Fermer la personnalisation' : 'Personnaliser le site');
+  };
+  burger.addEventListener('click', () => { const o = !menu.classList.contains('open'); setDr(false); setMenu(o); });
+  cust.addEventListener('click', () => { const o = !dr.classList.contains('open'); setMenu(false); setDr(o); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { setMenu(false); setDr(false); } });
+  document.addEventListener('click', e => { if (!menu.contains(e.target) && !burger.contains(e.target)) setMenu(false); if (!dr.contains(e.target) && !cust.contains(e.target)) setDr(false); });
+  const ld = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }, sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } };
+  let FAV = ld('boite-fav', []), REC = ld('boite-rec', []), cur = 'home';
+  const fav = $('#fav'), nm = id => (items.find(x => x.dataset.tab === id) || {}).textContent;
+  function quick() {
+    const q = $('#quick'); q.textContent = '';
+    [['★ Favoris', FAV], ['Récents', REC]].forEach(l => {
+      const ids = l[1].filter(nm); if (!ids.length) return;
+      q.appendChild(mk('h3', '', l[0])); const c = mk('div', 'chips');
+      ids.forEach(id => { const b = mk('button', '', nm(id)); b.type = 'button'; b.addEventListener('click', () => go(id)); c.appendChild(b); });
+      q.appendChild(c);
+    });
+  }
+  const go = id => {
+    const t = items.find(x => x.dataset.tab === id); if (!t) return;
     items.forEach(x => x.setAttribute('aria-current', x === t ? 'true' : 'false'));
-    document.querySelectorAll('.panel').forEach(x => { x.hidden = x.id !== 'p-' + t.dataset.tab; });
-    $('#current').textContent = t.textContent;
-    setMenu(false);
-  }));
+    document.querySelectorAll('.panel').forEach(x => { x.hidden = x.id !== 'p-' + id; });
+    $('#current').textContent = t.textContent; setMenu(false); window.scrollTo(0, 0);
+    cur = id; fav.hidden = id === 'home'; fav.textContent = FAV.indexOf(id) < 0 ? '☆' : '★';
+    if (id !== 'home') { REC = [id].concat(REC.filter(x => x !== id)).slice(0, 6); sv('boite-rec', REC); }
+    quick();
+  };
+  fav.addEventListener('click', () => { FAV = FAV.indexOf(cur) < 0 ? FAV.concat(cur) : FAV.filter(x => x !== cur); sv('boite-fav', FAV); fav.textContent = FAV.indexOf(cur) < 0 ? '☆' : '★'; quick(); });
+  const nz = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  $('#q').addEventListener('input', e => {
+    const t = nz(e.target.value.trim());
+    document.querySelectorAll('.grp').forEach(d => { let n = 0; d.querySelectorAll('button').forEach(b => { const ok = !t || nz(b.textContent).indexOf(t) >= 0; b.hidden = !ok; if (ok) n++; }); d.hidden = !n; if (t) d.open = true; });
+  });
+  document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); go('home'); $('#q').focus(); } });
+  if (ld('boite-tip', 0)) $('#tip').hidden = true;
+  $('#tipx').addEventListener('click', () => { $('#tip').hidden = true; sv('boite-tip', 1); });
+  quick();
+  if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  items.forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $('h1').addEventListener('click', () => go('home'));
+
+  /* ---------- Personnalisation ---------- */
+  const TH = [
+    ['Auto (appareil)'],
+    ['Clair', '#f5f6f8', '#ffffff', '#1a1d21', '#5d6671', '#d5d9de', '#2563eb', 0],
+    ['Sombre', '#121417', '#1c2025', '#eceff2', '#98a1ab', '#2f353c', '#60a5fa', 1],
+    ['Nuit', '#0a0e1f', '#131a33', '#e8ecff', '#8e9acb', '#27315c', '#7c9cff', 1],
+    ['Forêt', '#0f1a14', '#16261d', '#e4f2e8', '#8fae9a', '#2a4435', '#4ade80', 1],
+    ['Coucher de soleil', '#fff3e6', '#ffffff', '#3b1f1a', '#8a5a4d', '#f0cdb4', '#e8590c', 0],
+    ['Rose', '#fff0f5', '#ffffff', '#3d1a2b', '#8c5570', '#f2c9da', '#d6336c', 0],
+    ['Violet', '#1a1030', '#26184a', '#f0e9ff', '#a597c9', '#3d2a70', '#b388ff', 1],
+    ['Hacker', '#000000', '#0a120a', '#33ff66', '#1fa844', '#14521f', '#33ff66', 1],
+    ['Sable', '#f3ead9', '#fbf6ec', '#3a2e1f', '#7d6c52', '#decfb0', '#a0522d', 0],
+    ['Contraste élevé', '#000000', '#000000', '#ffffff', '#e0e0e0', '#ffffff', '#ffd400', 1]
+  ];
+  const FONTS = { sys: '"Segoe UI",system-ui,-apple-system,Roboto,sans-serif', serif: 'Georgia,"Times New Roman",serif', mono: 'ui-monospace,Consolas,Menlo,monospace', round: '"Trebuchet MS","Comic Sans MS",system-ui,sans-serif' };
+  const VARS = ['--bg', '--card', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--alert', '--ok'], CV = { accent: '--accent', bg: '--bg', card: '--card', ink: '--ink' };
+  const DEF = { theme: 0, accent: '', bg: '', card: '', ink: '', font: 'sys', fs: 100, r: 12, w: 680, anim: true, grad: false, sched: false };
+  const S = Object.assign({}, DEF), KEY = 'boite-outils-prefs', root = document.documentElement;
+  try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible */ }
+  const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const inkOn = h => lum(h) > 0.35 ? '#0b0b0b' : '#ffffff';
+
+  function apply() {
+    const hr = new Date().getHours(), st = root.style, t = TH[S.sched ? (hr >= 19 || hr < 7 ? 3 : 1) : S.theme] || TH[0], set = (k, v) => st.setProperty(k, v);
+    VARS.forEach(k => st.removeProperty(k));
+    if (t[1]) {
+      [['--bg', 1], ['--card', 2], ['--ink', 3], ['--muted', 4], ['--line', 5], ['--accent', 6]].forEach(a => set(a[0], t[a[1]]));
+      set('--accent-ink', inkOn(t[6])); set('--alert', t[7] ? '#ff8a80' : '#b3261e'); set('--ok', t[7] ? '#7ee2a0' : '#1b7f3b');
+    }
+    st.colorScheme = t[1] ? (t[7] ? 'dark' : 'light') : '';
+    if (S.bg) set('--bg', S.bg);
+    if (S.card) set('--card', S.card);
+    if (S.ink) set('--ink', S.ink);
+    if (S.bg || S.card || S.ink) { set('--muted', 'color-mix(in srgb, var(--ink) 62%, var(--bg))'); set('--line', 'color-mix(in srgb, var(--ink) 22%, var(--bg))'); }
+    if (S.accent) { set('--accent', S.accent); set('--accent-ink', inkOn(S.accent)); }
+    set('--font', FONTS[S.font] || FONTS.sys); set('--fs', S.fs + '%'); set('--r', S.r + 'px'); set('--w', S.w + 'px');
+    root.classList.toggle('noanim', !S.anim); document.body.classList.toggle('grad', !!S.grad);
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* stockage indisponible */ }
+  }
+
+  const h2 = t => dr.appendChild(mk('h2', '', t));
+  const put = (label, el, k) => { el.dataset.k = k; const l = mk('label', 'opt'); l.appendChild(mk('span', '', label)); l.appendChild(el); dr.appendChild(l); };
+  const mi = (type, o) => Object.assign(mk('input'), { type }, o);
+  h2('Thèmes');
+  const tg = dr.appendChild(mk('div', 'themes'));
+  const TB = TH.map((t, i) => {
+    const b = mk('button', '', t[0]), sw = mk('i'); b.type = 'button';
+    sw.style.background = t[1] ? 'linear-gradient(135deg,' + t[1] + ' 50%,' + t[6] + ' 50%)' : 'linear-gradient(135deg,#e9f0f3 50%,#12222c 50%)';
+    b.insertBefore(sw, b.firstChild);
+    b.addEventListener('click', () => { S.theme = i; S.accent = S.bg = S.card = S.ink = ''; apply(); sync(); });
+    return tg.appendChild(b);
+  });
+  h2('Couleurs');
+  put('Accent', mi('color'), 'accent'); put('Fond', mi('color'), 'bg'); put('Cartes', mi('color'), 'card'); put('Texte', mi('color'), 'ink');
+  h2('Texte et forme');
+  const sel = mk('select');
+  [['sys', 'Système'], ['serif', 'Élégante (serif)'], ['mono', 'Machine (mono)'], ['round', 'Arrondie']].forEach(o => { const op = mk('option', '', o[1]); op.value = o[0]; sel.appendChild(op); });
+  put('Police', sel, 'font');
+  put('Taille du texte', mi('range', { min: 85, max: 135, step: 5 }), 'fs');
+  put('Arrondi des angles', mi('range', { min: 0, max: 28, step: 2 }), 'r');
+  put('Largeur de page', mi('range', { min: 480, max: 1000, step: 20 }), 'w');
+  h2('Options');
+  put('Thème selon l’heure', mi('checkbox'), 'sched'); put('Animations', mi('checkbox'), 'anim'); put('Fond dégradé', mi('checkbox'), 'grad');
+  const rs = mk('button', 'ghost', 'Réinitialiser'); rs.type = 'button';
+  rs.addEventListener('click', () => { Object.assign(S, DEF); apply(); sync(); });
+  const ex = mk('button', 'ghost', 'Exporter mes réglages'), im = mk('button', 'ghost', 'Importer des réglages'); ex.type = 'button'; im.type = 'button';
+  ex.addEventListener('click', () => { const c = JSON.stringify(S); (navigator.clipboard ? navigator.clipboard.writeText(c) : Promise.reject()).then(() => { ex.textContent = 'Code copié ✓'; }, () => { prompt('Copie ce code :', c); }); });
+  im.addEventListener('click', () => { const c = prompt('Colle ton code de réglages :'); if (!c) return; try { const o = JSON.parse(c); Object.keys(DEF).forEach(k => { if (k in o && typeof o[k] === typeof DEF[k]) S[k] = o[k]; }); apply(); sync(); } catch (e) { alert('Code invalide.'); } });
+  dr.appendChild(ex); dr.appendChild(im); dr.appendChild(rs); dr.appendChild(mk('p', 'hint', 'Tes choix sont enregistrés sur cet appareil.'));
+  dr.addEventListener('input', e => { const t = e.target, k = t.dataset.k; if (!k) return; S[k] = t.type === 'checkbox' ? t.checked : t.type === 'range' ? +t.value : t.value; apply(); });
+
+  const sync = () => {
+    const cs = getComputedStyle(root);
+    dr.querySelectorAll('[data-k]').forEach(el => {
+      const k = el.dataset.k;
+      if (el.type === 'checkbox') el.checked = !!S[k];
+      else if (el.type === 'color') { const c = (S[k] || cs.getPropertyValue(CV[k])).trim(); if (/^#[0-9a-f]{6}$/i.test(c)) el.value = c; }
+      else el.value = S[k];
+    });
+    TB.forEach((b, i) => b.setAttribute('aria-pressed', i === S.theme ? 'true' : 'false'));
+  };
+  apply(); sync();
 })();
 </script>
 </body>
