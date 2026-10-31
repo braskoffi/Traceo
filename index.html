@@ -279,7 +279,8 @@
     status(p, note);
     render(p, CC[cc][1] + ' ' + CC[cc][0], fmt,
       [['Format plausible', valid ? 'Oui' : 'Non (longueur inhabituelle)'], ['Indicatif', '+' + cc], ['Numéro national', nat], ['Type de ligne', type], ['Zone', zone],
-       ['Format E.164', '+' + cc + nat]]);
+       ['Format E.164', '+' + cc + nat], ['Opérateur', cc === '33' ? 'Voir le lien ci-dessous et entre ' + ('0' + nat).slice(0, 6) + ' : il donne l’opérateur d’origine du bloc (les numéros portés ne sont pas pris en compte).' : '']],
+      cc === '33' ? ['Trouver l’opérateur (outil officiel ARCEP)', 'https://www.arcep.fr/mes-demarches-et-services/entreprises/fiches-pratiques/identifier-un-operateur-par-un-numero.html'] : null);
   }
 
   /* ---------- E-mail ---------- */
