@@ -455,6 +455,16 @@
   }
 
   /* ---------- Scan de lien ---------- */
+  const GLOSS = {
+    rat: 'RAT (Remote Access Trojan) : un logiciel espion qui donne à un pirate le contrôle de ton appareil à distance. Il peut voir ton écran, activer la caméra et le micro, copier tes fichiers et tes mots de passe. Il se cache souvent dans un faux fichier, un « crack » ou un faux jeu téléchargé.',
+    malware: 'Malware (logiciel malveillant) : mot général pour tout programme fait pour nuire, comme les virus, les ransomwares, les logiciels espions ou les chevaux de Troie.',
+    trojan: 'Cheval de Troie : programme qui se fait passer pour un fichier normal (facture, jeu, mise à jour) mais installe autre chose en cachette.',
+    stealer: 'Infostealer : malware qui vole les mots de passe enregistrés, les cookies de connexion et les jetons de comptes comme Discord, souvent pour prendre le contrôle de tes comptes.',
+    phishing: 'Phishing (hameçonnage) : faux site ou faux message qui imite un vrai service (banque, Discord, Google) pour te faire donner ton mot de passe ou ta carte bancaire.',
+    ransomware: 'Ransomware (rançongiciel) : malware qui chiffre tes fichiers puis réclame de l’argent pour les rendre.',
+    hidden: 'Lien raccourci : il cache la vraie destination, qui peut mener à n’importe quel piège ci-dessus.'
+  };
+
   function scanTool(p, raw) {
     let u;
     try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); }
@@ -462,18 +472,18 @@
     if (!/^https?:$/.test(u.protocol)) { status(p, 'Seuls les liens http et https sont analysés.', true); return; }
     hide(p); status(p, 'Analyse en cours…');
     const host = u.hostname, path = u.pathname.toLowerCase(), signals = []; let pts = 0;
-    const add = (n, t) => { pts += n; signals.push(t); };
+    const th = new Set(), add = (n, t, ...k) => { pts += n; signals.push(t); k.forEach(x => th.add(x)); };
     const SHORT = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'is.gd', 'cutt.ly', 'rebrand.ly', 'ow.ly', 'shorturl.at', 'tiny.cc'];
-    if (/\.(pdf|docx?|jpe?g|png|txt)\.(exe|scr|bat|js|vbs)(\/|$)/.test(path)) add(3, 'Double extension déguisée (ex. facture.pdf.exe)');
-    else if (/\.(exe|scr|bat|cmd|msi|apk|jar|vbs|ps1|lnk|hta|dll|docm|xlsm)(\/|$)/.test(path)) add(3, 'Le lien mène à un fichier exécutable ou à macros');
-    else if (/\.(zip|rar|7z|iso|img)(\/|$)/.test(path)) add(1, 'Archive à n’ouvrir qu’avec prudence');
-    if (u.username || u.password) add(3, 'Identifiants dans le lien (phishing courant)');
-    if (V4.test(host) || host.indexOf(':') !== -1) add(2, 'Adresse IP à la place d’un nom de domaine');
-    if (host.indexOf('xn--') !== -1) add(2, 'Caractères spéciaux dans le domaine (risque de faux site)');
-    if (SHORT.indexOf(host) !== -1) add(1, 'Lien raccourci : la vraie destination est cachée');
-    if (host.split('.').length > 4) add(1, 'Beaucoup de sous-domaines');
+    if (/\.(pdf|docx?|jpe?g|png|txt)\.(exe|scr|bat|js|vbs)(\/|$)/.test(path)) add(3, 'Double extension déguisée (ex. facture.pdf.exe)', 'rat', 'trojan', 'stealer', 'malware');
+    else if (/\.(exe|scr|bat|cmd|msi|apk|jar|vbs|ps1|lnk|hta|dll|docm|xlsm)(\/|$)/.test(path)) add(3, 'Le lien mène à un fichier exécutable ou à macros', 'rat', 'trojan', 'stealer', 'malware');
+    else if (/\.(zip|rar|7z|iso|img)(\/|$)/.test(path)) add(1, 'Archive à n’ouvrir qu’avec prudence', 'malware');
+    if (u.username || u.password) add(3, 'Identifiants dans le lien (phishing courant)', 'phishing');
+    if (V4.test(host) || host.indexOf(':') !== -1) add(2, 'Adresse IP à la place d’un nom de domaine', 'phishing', 'malware');
+    if (host.indexOf('xn--') !== -1) add(2, 'Caractères spéciaux dans le domaine (risque de faux site)', 'phishing');
+    if (SHORT.indexOf(host) !== -1) add(1, 'Lien raccourci : la vraie destination est cachée', 'hidden');
+    if (host.split('.').length > 4) add(1, 'Beaucoup de sous-domaines', 'phishing');
     if (u.protocol === 'http:') add(1, 'Connexion non chiffrée (http)');
-    if (/(login|signin|verify|secure|account|update|wallet|gift|free|nitro|airdrop|claim)/.test(host + path)) add(1, 'Mots d’appât courants (login, gift, nitro…)');
+    if (/(login|signin|verify|secure|account|update|wallet|gift|free|nitro|airdrop|claim)/.test(host + path)) add(1, 'Mots d’appât courants (login, gift, nitro…)', 'phishing', 'stealer');
     const reg = host.split('.').slice(-2).join('.');
     const rd = V4.test(host) ? Promise.resolve(null)
       : fetch('https://rdap.org/domain/' + encodeURIComponent(reg)).then(r => r.ok ? r.json() : null).catch(() => null);
@@ -484,15 +494,19 @@
         if (ev) {
           const days = Math.floor((Date.now() - new Date(ev.eventDate)) / 864e5);
           age = days + ' jours (créé le ' + fdate(ev.eventDate) + ')';
-          if (days < 30) add(2, 'Domaine créé il y a moins de 30 jours');
-          else if (days < 180) add(1, 'Domaine récent (moins de 6 mois)');
+          if (days < 30) add(2, 'Domaine créé il y a moins de 30 jours', 'phishing', 'malware');
+          else if (days < 180) add(1, 'Domaine récent (moins de 6 mois)', 'phishing');
         }
       } catch (e) { /* RDAP indisponible */ }
       status(p, '');
       const level = pts >= 4 ? 'Risque élevé' : pts >= 2 ? 'Risque moyen' : 'Peu de signaux d’alerte';
       render(p, level, host + ' (le lien n’a pas été ouvert)',
         [['Signaux', signals.length ? signals.join('\n') : 'Aucun détecté'], ['Âge du domaine', age],
-         ['À savoir', 'Cette analyse ne télécharge pas le lien : seuls les scanners ci-dessous peuvent détecter un malware ou un RAT. Aucun signal ne veut pas dire sûr.']]);
+         ['Menaces possibles', th.size ? Array.from(th).map(k => GLOSS[k]).join('\n\n') : 'Aucune menace précise repérée.'],
+         ['Ce que ça signifie', pts >= 4 ? 'Plusieurs signes typiques d’une arnaque ou d’un fichier piégé. N’ouvre pas le lien, ne télécharge rien et n’entre aucun mot de passe. Si tu l’as déjà ouvert, change tes mots de passe depuis un autre appareil et fais une analyse antivirus.'
+           : pts >= 2 ? 'Quelques signes suspects. Passe par le site officiel au lieu de cliquer, et n’entre aucun mot de passe ni donnée bancaire avant d’avoir vérifié le lien sur un scanner.'
+           : 'Aucun signe évident, mais ça ne prouve pas que le lien est sûr : un site piégé peut avoir l’air normal.'],
+         ['À savoir', 'Cette analyse ne télécharge pas le lien. Seuls les scanners ci-dessous peuvent vraiment détecter un malware ou un RAT.']]);
       const box = mk('div'); box.style.marginTop = '14px';
       [['VirusTotal', 'https://www.virustotal.com/gui/search/' + encodeURIComponent(u.href)],
        ['urlscan.io', 'https://urlscan.io/search/#' + encodeURIComponent(host)],
@@ -500,6 +514,11 @@
         const a = mk('a', 'map', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.marginRight = '16px'; box.appendChild(a);
       });
       $('.result', p).appendChild(box);
+      const det = mk('details'), sm = mk('summary', '', 'C’est quoi un RAT, un malware, du phishing… ?');
+      det.style.marginTop = '14px'; sm.style.cssText = 'cursor:pointer;color:var(--accent);font-weight:600';
+      det.appendChild(sm);
+      Object.keys(GLOSS).forEach(k => { const q = mk('p', '', GLOSS[k]); q.style.margin = '10px 0 0'; det.appendChild(q); });
+      $('.result', p).appendChild(det);
     });
   }
 
