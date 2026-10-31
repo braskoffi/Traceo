@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boîte à outils réseau</title>
+<style>
+  :root { --bg:#e9f0f3; --card:#fff; --ink:#0f2230; --muted:#5b7080; --line:#c9d6dd; --accent:#0b6e7f; --accent-ink:#fff; --alert:#b3261e; --ok:#1b7f3b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0c171e; --card:#12222c; --ink:#e6f0f3; --muted:#8aa2b0; --line:#25404e; --accent:#4fd1c5; --accent-ink:#062027; --alert:#ff8a80; --ok:#7ee2a0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; line-height:1.5; min-height:100vh; padding:24px 16px 48px; }
+  main { max-width:680px; margin:0 auto; }
+  h1 { font-size:1.5rem; letter-spacing:-.02em; margin:0; }
+  .sub { color:var(--accent); font-weight:600; margin:16px 0 20px; }
+  header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative; margin-top:8px; }
+  .burger { flex:0 0 auto; width:48px; height:48px; padding:0; display:grid; place-content:center; gap:5px; background:var(--card); border:1px solid var(--line); border-radius:12px; cursor:pointer; }
+  .burger span { display:block; width:22px; height:2px; background:var(--ink); border-radius:2px; transition:transform .35s ease, opacity .25s ease; }
+  .burger[aria-expanded=true] span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+  .burger[aria-expanded=true] span:nth-child(2) { opacity:0; }
+  .burger[aria-expanded=true] span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+  .menu { position:absolute; right:0; top:100%; margin-top:8px; width:min(150px,100%); background:color-mix(in srgb, var(--card) 40%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px; padding:4px; z-index:10; visibility:hidden; pointer-events:none; }
+  .menu.open { visibility:visible; pointer-events:auto; }
+  .menu { max-height:70vh; overflow-y:auto; }
+  .menu .mh { margin:8px 10px 2px; font-size:.7rem; color:var(--muted); }
+  .menu button { display:block; width:100%; text-align:left; padding:7px 10px; font-size:.85rem; font-weight:600; color:var(--ink); background:transparent; border:0; border-radius:8px; cursor:pointer; opacity:0; transform:translateX(18px); transition:opacity .2s ease, transform .2s ease; }
+  .menu.open button { opacity:1; transform:none; transition:opacity .5s ease, transform .5s ease; transition-delay:calc(min(var(--i), 8) * 150ms); }
+  .menu button[aria-current=true] { background:var(--accent); color:var(--accent-ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .burger span, .menu button, .menu.open button { transition:none; transition-delay:0s; }
+  }
+  .panel[hidden], .result[hidden] { display:none; }
+  .hint { color:var(--muted); margin:0 0 12px; font-size:.95rem; }
+  form { display:flex; gap:8px; flex-wrap:wrap; }
+  input, textarea { flex:1 1 220px; min-width:0; padding:14px; font-size:1rem; font-family:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  textarea { resize:vertical; }
+  button.primary, button.ghost { padding:14px 18px; font-size:1rem; font-weight:600; border-radius:10px; border:1px solid var(--accent); cursor:pointer; }
+  button.primary { background:var(--accent); color:var(--accent-ink); }
+  button.ghost { background:transparent; color:var(--accent); }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  .status { margin:14px 0 0; min-height:1.5em; color:var(--muted); }
+  .status.error { color:var(--alert); }
+  .result { margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .place { font-size:1.4rem; font-weight:700; margin:0; }
+  .ipline { color:var(--muted); margin:2px 0 14px; word-break:break-all; }
+  dl { display:grid; grid-template-columns:max-content 1fr; gap:8px 16px; margin:0; }
+  dt { color:var(--muted); }
+  dd { margin:0; word-break:break-word; white-space:pre-wrap; }
+  .map { display:inline-block; margin-top:14px; color:var(--accent); font-weight:600; }
+  footer { margin-top:28px; color:var(--muted); font-size:.875rem; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Boîte à outils réseau</h1>
+    <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <nav class="menu" id="menu" aria-label="Catégories">
+      <button data-tab="ip" aria-current="true">IP</button>
+      <button data-tab="tel" aria-current="false">Téléphone</button>
+      <button data-tab="mail" aria-current="false">E-mail</button>
+      <button data-tab="dom" aria-current="false">Domaine</button>
+      <button data-tab="net" aria-current="false">Réseau</button>
+      <button data-tab="dev" aria-current="false">Appareil</button>
+      <button data-tab="url" aria-current="false">Lien (URL)</button>
+      <button data-tab="scan" aria-current="false">Scan de lien</button>
+      <button data-tab="enc" aria-current="false">Encodage</button>
+      <button data-tab="pwd" aria-current="false">Mot de passe</button>
+      <button data-tab="chk" aria-current="false">Test de force</button>
+      <button data-tab="tz" aria-current="false">Fuseaux horaires</button>
+      <button data-tab="col" aria-current="false">Couleur</button>
+      <button data-tab="txt" aria-current="false">Texte</button>
+    </nav>
+  </header>
+  <p class="sub" id="current">IP</p>
+
+  <section class="panel" id="p-ip" role="tabpanel">
+    <p class="hint">Localise une adresse IP publique : ville, pays, fournisseur d’accès.</p>
+    <form data-tool="ip"><input placeholder="Ex. 8.8.8.8 ou 2001:4860:4860::8888" aria-label="Adresse IP" autocomplete="off" spellcheck="false"><button class="primary">Tracer</button><button type="button" class="ghost" data-me>Ma propre IP</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-tel" role="tabpanel" hidden>
+    <p class="hint">Vérifie le format d’un numéro : pays, format international, type de ligne (précis pour la France).</p>
+    <form data-tool="tel"><input type="tel" placeholder="Ex. 06 12 34 56 78 ou +44 20 7946 0958" aria-label="Numéro de téléphone" autocomplete="off"><button class="primary">Analyser</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-mail" role="tabpanel" hidden>
+    <p class="hint">Contrôle une adresse e-mail : syntaxe, domaine, serveurs de courrier, adresse jetable.</p>
+    <form data-tool="mail"><input type="email" placeholder="nom@exemple.com" aria-label="Adresse e-mail" autocomplete="off" spellcheck="false"><button class="primary">Vérifier</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-dom" role="tabpanel" hidden>
+    <p class="hint">Affiche les enregistrements DNS d’un domaine et ses dates d’enregistrement.</p>
+    <form data-tool="dom"><input placeholder="exemple.com" aria-label="Nom de domaine" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-net" role="tabpanel" hidden>
+    <p class="hint">Convertit une IPv4 (décimal, hexadécimal, binaire) ou calcule un sous-réseau CIDR.</p>
+    <form data-tool="net"><input placeholder="192.168.1.10 ou 192.168.1.0/24" aria-label="IPv4 ou CIDR" autocomplete="off" spellcheck="false"><button class="primary">Calculer</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-dev" role="tabpanel" hidden>
+    <p class="hint">Ce que ton navigateur révèle de ton appareil et de ta connexion.</p>
+    <form data-tool="dev"><button class="primary">Analyser mon appareil</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-url" role="tabpanel" hidden>
+    <p class="hint">Décompose un lien et repère les signes typiques d’un faux site.</p>
+    <form data-tool="url"><input placeholder="https://exemple.com/page?x=1" aria-label="Lien à analyser" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-enc" role="tabpanel" hidden>
+    <p class="hint">Convertit un texte en Base64, URL, hexadécimal, binaire et calcule ses empreintes SHA.</p>
+    <form data-tool="enc"><input placeholder="Texte à convertir" aria-label="Texte" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-pwd" role="tabpanel" hidden>
+    <p class="hint">Génère un mot de passe aléatoire solide, directement dans ton navigateur.</p>
+    <form data-tool="pwd"><input type="number" inputmode="numeric" min="8" max="64" placeholder="Longueur (8 à 64, 16 par défaut)" aria-label="Longueur du mot de passe"><button class="primary">Générer</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-scan" role="tabpanel" hidden>
+    <p class="hint">Repère les signes d’un lien dangereux sans l’ouvrir, puis vérifie-le sur des scanners de référence.</p>
+    <form data-tool="scan"><input placeholder="Colle le lien suspect ici" aria-label="Lien suspect" autocomplete="off" spellcheck="false"><button class="primary">Scanner</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-chk" role="tabpanel" hidden>
+    <p class="hint">Teste la solidité d’un mot de passe. Il reste dans ton navigateur et n’est jamais envoyé.</p>
+    <form data-tool="chk"><input type="password" placeholder="Mot de passe à tester" aria-label="Mot de passe à tester" autocomplete="off"><button class="primary">Tester</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-tz" role="tabpanel" hidden>
+    <p class="hint">Affiche la même heure dans plusieurs villes. Laisse vide pour l’heure actuelle.</p>
+    <form data-tool="tz"><input type="datetime-local" aria-label="Date et heure"><button class="primary">Convertir</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-col" role="tabpanel" hidden>
+    <p class="hint">Convertit une couleur entre HEX, RGB et HSL et donne son contraste.</p>
+    <form data-tool="col"><input placeholder="#4fd1c5 ou rgb(79, 209, 197)" aria-label="Couleur" autocomplete="off" spellcheck="false"><button class="primary">Convertir</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <section class="panel" id="p-txt" role="tabpanel" hidden>
+    <p class="hint">Compte les caractères, mots et phrases, et transforme le texte (majuscules, slug, inversé).</p>
+    <form data-tool="txt"><textarea rows="4" placeholder="Colle ton texte ici" aria-label="Texte à analyser"></textarea><button class="primary">Analyser</button></form>
+    <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
+  </section>
+
+  <footer>Ces outils vérifient des données techniques. Ils ne permettent pas d’identifier ni de localiser une personne : une IP donne une zone approximative, un numéro ou un e-mail ne donnent aucune position.</footer>
+</main>
+
+<script>
+(function () {
+  const $ = (s, r) => (r || document).querySelector(s);
+  const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
+  const status = (p, m, err) => { const s = $('.status', p); s.textContent = m || ''; s.className = 'status' + (err ? ' error' : ''); };
+  const hide = p => { $('.result', p).hidden = true; };
+
+  function render(p, title, sub, rows, link) {
+    const r = $('.result', p); r.textContent = '';
+    r.appendChild(mk('p', 'place', title));
+    if (sub) r.appendChild(mk('p', 'ipline', sub));
+    const dl = mk('dl');
+    rows.forEach(x => {
+      if (x[1] === undefined || x[1] === null || x[1] === '') return;
+      dl.appendChild(mk('dt', '', x[0])); dl.appendChild(mk('dd', '', String(x[1])));
+    });
+    r.appendChild(dl);
+    if (link) { const a = mk('a', 'map', link[0]); a.href = link[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; r.appendChild(a); }
+    r.hidden = false;
+  }
+
+  const V4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
+  const validIp = v => V4.test(v) || (v.indexOf(':') !== -1 && /^[0-9a-fA-F:]+$/.test(v));
+  const doh = (name, type) => fetch('https://dns.google/resolve?name=' + encodeURIComponent(name) + '&type=' + type).then(r => r.json());
+  const netErr = p => status(p, 'Le service ne répond pas. Réessaie dans un instant.', true);
+
+  /* ---------- IP ---------- */
+  function ipTool(p, v) {
+    if (v && !validIp(v)) { status(p, 'Adresse IP invalide. Vérifie le format (ex. 8.8.8.8).', true); return; }
+    hide(p); status(p, 'Recherche en cours…');
+    fetch('https://ipwho.is/' + encodeURIComponent(v)).then(r => r.json()).then(d => {
+      if (!d.success) { status(p, 'Impossible de tracer cette adresse : ' + (d.message || 'erreur inconnue') + '.', true); return; }
+      status(p, '');
+      const c = d.connection || {}, tz = d.timezone || {};
+      render(p, ((d.flag && d.flag.emoji) ? d.flag.emoji + ' ' : '') + ([d.city, d.region].filter(Boolean).join(', ') || d.country),
+        d.ip + ' (' + d.type + ')',
+        [['Pays', d.country + ' (' + d.country_code + ')'], ['Continent', d.continent], ['Région', d.region], ['Ville', d.city], ['Code postal', d.postal],
+         ['Coordonnées', d.latitude + ', ' + d.longitude], ['Fuseau horaire', tz.id ? tz.id + ' (UTC' + tz.utc + ')' : ''],
+         ['Fournisseur', c.isp], ['Organisation', c.org], ['ASN', c.asn ? 'AS' + c.asn : ''], ['Domaine', c.domain]],
+        ['Voir sur la carte', 'https://www.google.com/maps?q=' + encodeURIComponent(d.latitude + ',' + d.longitude)]);
+    }).catch(() => netErr(p));
+  }
+
+  /* ---------- Téléphone ---------- */
+  const CC = { '1':['États-Unis / Canada','🇺🇸'],'7':['Russie / Kazakhstan','🇷🇺'],'20':['Égypte','🇪🇬'],'27':['Afrique du Sud','🇿🇦'],'30':['Grèce','🇬🇷'],'31':['Pays-Bas','🇳🇱'],'32':['Belgique','🇧🇪'],'33':['France','🇫🇷'],'34':['Espagne','🇪🇸'],'36':['Hongrie','🇭🇺'],'39':['Italie','🇮🇹'],'40':['Roumanie','🇷🇴'],'41':['Suisse','🇨🇭'],'43':['Autriche','🇦🇹'],'44':['Royaume-Uni','🇬🇧'],'45':['Danemark','🇩🇰'],'46':['Suède','🇸🇪'],'47':['Norvège','🇳🇴'],'48':['Pologne','🇵🇱'],'49':['Allemagne','🇩🇪'],'51':['Pérou','🇵🇪'],'52':['Mexique','🇲🇽'],'54':['Argentine','🇦🇷'],'55':['Brésil','🇧🇷'],'56':['Chili','🇨🇱'],'57':['Colombie','🇨🇴'],'60':['Malaisie','🇲🇾'],'61':['Australie','🇦🇺'],'62':['Indonésie','🇮🇩'],'63':['Philippines','🇵🇭'],'64':['Nouvelle-Zélande','🇳🇿'],'65':['Singapour','🇸🇬'],'66':['Thaïlande','🇹🇭'],'81':['Japon','🇯🇵'],'82':['Corée du Sud','🇰🇷'],'84':['Viêt Nam','🇻🇳'],'86':['Chine','🇨🇳'],'90':['Turquie','🇹🇷'],'91':['Inde','🇮🇳'],'92':['Pakistan','🇵🇰'],'212':['Maroc','🇲🇦'],'213':['Algérie','🇩🇿'],'216':['Tunisie','🇹🇳'],'221':['Sénégal','🇸🇳'],'225':['Côte d’Ivoire','🇨🇮'],'237':['Cameroun','🇨🇲'],'262':['La Réunion / Mayotte','🇷🇪'],'351':['Portugal','🇵🇹'],'352':['Luxembourg','🇱🇺'],'353':['Irlande','🇮🇪'],'358':['Finlande','🇫🇮'],'380':['Ukraine','🇺🇦'],'590':['Guadeloupe','🇬🇵'],'594':['Guyane','🇬🇫'],'596':['Martinique','🇲🇶'],'966':['Arabie saoudite','🇸🇦'],'971':['Émirats arabes unis','🇦🇪'],'972':['Israël','🇮🇱'] };
+  const FR_ZONE = { '1':'Île-de-France', '2':'Nord-Ouest', '3':'Nord-Est', '4':'Sud-Est', '5':'Sud-Ouest' };
+
+  function telTool(p, raw) {
+    let s = raw.replace(/[\s.\-()]/g, ''), note = '';
+    if (s.startsWith('00')) s = '+' + s.slice(2);
+    if (s.startsWith('0')) { s = '+33' + s.slice(1); note = 'Numéro sans indicatif : France supposée.'; }
+    if (!/^\+\d{7,15}$/.test(s)) { status(p, 'Numéro invalide. Utilise le format 06 12 34 56 78 ou +33 6 12 34 56 78.', true); return; }
+    const d = s.slice(1); let cc = null;
+    for (let n = 3; n >= 1; n--) { if (CC[d.slice(0, n)]) { cc = d.slice(0, n); break; } }
+    if (!cc) { status(p, 'Indicatif pays inconnu dans cet outil.', true); return; }
+    const nat = d.slice(cc.length); let valid = nat.length >= 4 && nat.length <= 12, type = 'Non déterminé', zone = '', fmt;
+    if (cc === '33') {
+      valid = /^[1-9]\d{8}$/.test(nat); const f = nat[0];
+      type = f === '6' || f === '7' ? 'Mobile' : f === '9' ? 'VoIP / box internet' : f === '8' ? 'Numéro spécial' : FR_ZONE[f] ? 'Fixe' : 'Non déterminé';
+      zone = FR_ZONE[f] ? 'Zone ' + FR_ZONE[f] + ' (approximative)' : '';
+      fmt = '+33 ' + nat[0] + ' ' + (nat.slice(1).match(/.{1,2}/g) || []).join(' ');
+    } else {
+      if (cc === '1') valid = /^\d{10}$/.test(nat);
+      fmt = '+' + cc + ' ' + (nat.match(/.{1,3}/g) || []).join(' ');
+    }
+    status(p, note);
+    render(p, CC[cc][1] + ' ' + CC[cc][0], fmt,
+      [['Format plausible', valid ? 'Oui' : 'Non (longueur inhabituelle)'], ['Indicatif', '+' + cc], ['Numéro national', nat], ['Type de ligne', type], ['Zone', zone],
+       ['Format E.164', '+' + cc + nat]]);
+  }
+
+  /* ---------- E-mail ---------- */
+  const DISPOSABLE = ['mailinator.com','yopmail.com','guerrillamail.com','tempmail.com','10minutemail.com','trashmail.com','sharklasers.com','getnada.com','temp-mail.org','throwawaymail.com'];
+  const FREE = ['gmail.com','outlook.com','hotmail.com','hotmail.fr','yahoo.com','yahoo.fr','icloud.com','proton.me','protonmail.com','orange.fr','free.fr','laposte.net','sfr.fr','live.fr'];
+  const TYPOS = { 'gmial.com':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gmail.fr':'gmail.com','hotmial.com':'hotmail.com','outlok.com':'outlook.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com' };
+
+  function mailTool(p, v) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || v.length > 254) { status(p, 'Adresse e-mail invalide. Format attendu : nom@exemple.com.', true); return; }
+    const at = v.lastIndexOf('@'), user = v.slice(0, at), dom = v.slice(at + 1).toLowerCase();
+    hide(p); status(p, 'Vérification du domaine…');
+    doh(dom, 'MX').then(d => {
+      status(p, '');
+      const mx = (d.Answer || []).filter(a => a.type === 15).map(a => a.data.split(' ').slice(1).join(' ').replace(/\.$/, ''));
+      const exists = d.Status !== 3;
+      render(p, exists ? (mx.length ? 'Domaine valide' : 'Domaine sans serveur de courrier') : 'Domaine inexistant', v,
+        [['Syntaxe', 'Valide'], ['Nom d’utilisateur', user], ['Domaine', dom], ['Domaine existant', exists ? 'Oui' : 'Non'],
+         ['Reçoit du courrier (MX)', mx.length ? 'Oui' : 'Non'], ['Serveurs MX', mx.slice(0, 5).join('\n')],
+         ['Fournisseur gratuit', FREE.indexOf(dom) !== -1 ? 'Oui' : 'Non'], ['Adresse jetable', DISPOSABLE.indexOf(dom) !== -1 ? 'Oui' : 'Non'],
+         ['Faute possible', TYPOS[dom] ? 'Tu voulais dire @' + TYPOS[dom] + ' ?' : '']]);
+    }).catch(() => netErr(p));
+  }
+
+  /* ---------- Domaine ---------- */
+  const fdate = s => { const t = new Date(s); return isNaN(t) ? s : t.toLocaleDateString('fr-FR'); };
+
+  function domTool(p, raw) {
+    const v = raw.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+    if (!/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(v)) { status(p, 'Nom de domaine invalide (ex. exemple.com).', true); return; }
+    hide(p); status(p, 'Analyse en cours…');
+    const types = ['A', 'AAAA', 'MX', 'NS', 'TXT'];
+    const rdap = fetch('https://rdap.org/domain/' + encodeURIComponent(v)).then(r => r.ok ? r.json() : null).catch(() => null);
+    Promise.all(types.map(t => doh(v, t)).concat([rdap])).then(res => {
+      status(p, '');
+      const rows = [];
+      types.forEach((t, i) => {
+        const a = (res[i].Answer || []).filter(x => x.type === { A:1, AAAA:28, MX:15, NS:2, TXT:16 }[t]).map(x => x.data.replace(/\.$/, ''));
+        if (a.length) rows.push([t, a.slice(0, 6).join('\n')]);
+      });
+      const w = res[types.length];
+      if (w) {
+        try {
+          const ev = {}; (w.events || []).forEach(e => { ev[e.eventAction] = e.eventDate; });
+          const reg = (w.entities || []).find(e => e.roles && e.roles.indexOf('registrar') !== -1);
+          const fn = reg && reg.vcardArray ? (reg.vcardArray[1].find(x => x[0] === 'fn') || [])[3] : '';
+          rows.push(['Bureau d’enregistrement', fn], ['Créé le', ev.registration ? fdate(ev.registration) : ''],
+            ['Expire le', ev.expiration ? fdate(ev.expiration) : ''], ['Modifié le', ev['last changed'] ? fdate(ev['last changed']) : ''],
+            ['Statut', (w.status || []).join(', ')]);
+        } catch (e) { /* données RDAP incomplètes */ }
+      }
+      if (!rows.length) { status(p, 'Aucun enregistrement trouvé : le domaine n’existe peut-être pas.', true); return; }
+      render(p, v, 'Enregistrements DNS et registre', rows);
+    }).catch(() => netErr(p));
+  }
+
+  /* ---------- Réseau ---------- */
+  const toN = s => { const m = s.split('.').map(Number); return ((m[0] << 24) | (m[1] << 16) | (m[2] << 8) | m[3]) >>> 0; };
+  const toIp = n => [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
+
+  function netTool(p, v) {
+    const parts = v.split('/'), ip = parts[0];
+    if (!V4.test(ip)) { status(p, 'Entre une IPv4 valide (ex. 192.168.1.10) ou un CIDR (ex. 192.168.1.0/24). IPv6 non pris en charge ici.', true); return; }
+    const n = toN(ip), o = ip.split('.').map(Number); status(p, '');
+    if (parts.length === 2) {
+      const pre = Number(parts[1]);
+      if (!/^\d+$/.test(parts[1]) || pre < 0 || pre > 32) { status(p, 'Préfixe CIDR invalide (0 à 32).', true); return; }
+      const mask = pre === 0 ? 0 : (0xFFFFFFFF << (32 - pre)) >>> 0, net = (n & mask) >>> 0, bc = (net | ~mask) >>> 0;
+      const small = pre >= 31;
+      render(p, net ? toIp(net) + '/' + pre : '0.0.0.0/' + pre, 'Sous-réseau',
+        [['Masque', toIp(mask)], ['Adresse réseau', toIp(net)], ['Broadcast', pre === 32 ? '' : toIp(bc)],
+         ['Première adresse', toIp(small ? net : net + 1)], ['Dernière adresse', toIp(small ? bc : bc - 1)],
+         ['Adresses utilisables', pre === 32 ? 1 : pre === 31 ? 2 : Math.pow(2, 32 - pre) - 2]]);
+      return;
+    }
+    const type = o[0] === 10 || (o[0] === 172 && o[1] >= 16 && o[1] <= 31) || (o[0] === 192 && o[1] === 168) ? 'Privée (réseau local)'
+      : o[0] === 127 ? 'Boucle locale' : (o[0] === 169 && o[1] === 254) ? 'Lien local' : (o[0] === 100 && o[1] >= 64 && o[1] <= 127) ? 'Partagée opérateur (CGNAT)'
+      : o[0] >= 224 ? 'Multicast ou réservée' : 'Publique';
+    render(p, ip, type,
+      [['Décimal', n], ['Hexadécimal', '0x' + n.toString(16).toUpperCase().padStart(8, '0')],
+       ['Binaire', o.map(x => x.toString(2).padStart(8, '0')).join('.')], ['Classe', o[0] < 128 ? 'A' : o[0] < 192 ? 'B' : o[0] < 224 ? 'C' : o[0] < 240 ? 'D' : 'E']]);
+  }
+
+  /* ---------- Appareil ---------- */
+  function devTool(p) {
+    const n = navigator, c = n.connection || {};
+    const rows = [['Navigateur', n.userAgent], ['Système', n.platform], ['Langue', (n.languages || [n.language]).join(', ')],
+      ['Fuseau horaire', Intl.DateTimeFormat().resolvedOptions().timeZone], ['Écran', screen.width + ' × ' + screen.height + ' (ratio ' + window.devicePixelRatio + ')'],
+      ['Cœurs processeur', n.hardwareConcurrency], ['Mémoire (approx.)', n.deviceMemory ? n.deviceMemory + ' Go' : ''],
+      ['Type de connexion', c.effectiveType], ['Connecté', n.onLine ? 'Oui' : 'Non'], ['Cookies', n.cookieEnabled ? 'Activés' : 'Désactivés']];
+    render(p, 'Ton appareil', 'Informations visibles par n’importe quel site', rows); status(p, 'Récupération de ton IP publique…');
+    fetch('https://ipwho.is/').then(r => r.json()).then(d => {
+      status(p, '');
+      if (d.success) { rows.push(['IP publique', d.ip], ['Position approximative', [d.city, d.country].filter(Boolean).join(', ')], ['Fournisseur', (d.connection || {}).isp]); render(p, 'Ton appareil', 'Informations visibles par n’importe quel site', rows); }
+    }).catch(() => status(p, ''));
+  }
+
+  /* ---------- Lien (URL) ---------- */
+  function urlTool(p, raw) {
+    let u;
+    try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); }
+    catch (e) { status(p, 'Lien invalide. Exemple : https://exemple.com/page?x=1.', true); return; }
+    status(p, '');
+    const params = []; u.searchParams.forEach((val, k) => params.push(k + ' = ' + val));
+    const host = u.hostname, alerts = [];
+    if (u.username || u.password) alerts.push('Identifiants dans le lien (technique de phishing courante)');
+    if (V4.test(host) || host.indexOf(':') !== -1) alerts.push('Adresse IP à la place d’un nom de domaine');
+    if (host.indexOf('xn--') !== -1) alerts.push('Nom de domaine avec caractères spéciaux (risque de faux site)');
+    if (host.split('.').length > 4) alerts.push('Beaucoup de sous-domaines');
+    if (u.protocol === 'http:') alerts.push('Connexion non chiffrée (http)');
+    if (raw.length > 200) alerts.push('Lien très long');
+    render(p, host, u.protocol === 'https:' ? 'Lien chiffré (https)' : 'Protocole ' + u.protocol.replace(':', ''),
+      [['Protocole', u.protocol.replace(':', '')], ['Hôte', host], ['Port', u.port || 'par défaut'], ['Chemin', u.pathname],
+       ['Paramètres', params.join('\n')], ['Ancre', u.hash.replace(/^#/, '')], ['Signaux d’alerte', alerts.length ? alerts.join('\n') : 'Aucun détecté']]);
+  }
+
+  /* ---------- Encodage ---------- */
+  function encTool(p, v) {
+    if (!v) { status(p, 'Entre un texte à convertir.', true); return; }
+    status(p, '');
+    const bytes = new TextEncoder().encode(v); let bin = '';
+    bytes.forEach(b => { bin += String.fromCharCode(b); });
+    let b64d, urld;
+    try { b64d = new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(v.replace(/\s/g, '')), c => c.charCodeAt(0))); }
+    catch (e) { b64d = 'Non décodable (pas du Base64 valide)'; }
+    try { urld = decodeURIComponent(v); } catch (e) { urld = 'Non décodable'; }
+    const hex = b => b.toString(16).padStart(2, '0');
+    const rows = [['Base64', btoa(bin)], ['Base64 décodé', b64d], ['URL encodé', encodeURIComponent(v)], ['URL décodé', urld],
+      ['Hexadécimal', Array.from(bytes, hex).join(' ')], ['Binaire', Array.from(bytes, b => b.toString(2).padStart(8, '0')).join(' ')]];
+    const sub = v.length + ' caractère(s), ' + bytes.length + ' octet(s)';
+    if (!(window.crypto && crypto.subtle)) { render(p, 'Résultats', sub, rows); return; }
+    const hash = a => crypto.subtle.digest(a, bytes).then(h => Array.from(new Uint8Array(h), hex).join(''));
+    Promise.all([hash('SHA-256'), hash('SHA-1')]).then(h => { rows.push(['SHA-256', h[0]], ['SHA-1', h[1]]); render(p, 'Résultats', sub, rows); })
+      .catch(() => render(p, 'Résultats', sub, rows));
+  }
+
+  /* ---------- Mot de passe ---------- */
+  function pwdTool(p, v) {
+    const n = v ? parseInt(v, 10) : 16;
+    if (!(n >= 8 && n <= 64)) { status(p, 'Choisis une longueur entre 8 et 64.', true); return; }
+    status(p, '');
+    const sets = ['abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '0123456789', '!@#$%^&*-_+=?'], all = sets.join('');
+    const rnd = max => { const lim = Math.floor(256 / max) * max; let b; do { b = crypto.getRandomValues(new Uint8Array(1))[0]; } while (b >= lim); return b % max; };
+    let pw;
+    do { pw = Array.from({ length: n }, () => all[rnd(all.length)]).join(''); } while (!sets.every(s => Array.from(pw).some(c => s.indexOf(c) !== -1)));
+    const bits = Math.round(n * Math.log2(all.length));
+    render(p, 'Mot de passe généré', 'Créé dans ton navigateur, rien n’est envoyé',
+      [['Mot de passe', pw], ['Longueur', n + ' caractères'], ['Entropie', bits + ' bits'], ['Force', bits >= 100 ? 'Très forte' : bits >= 70 ? 'Forte' : 'Moyenne']]);
+  }
+
+  /* ---------- Test de force ---------- */
+  const humanTime = s => s < 1 ? 'Instantané' : s < 60 ? Math.round(s) + ' secondes' : s < 3600 ? Math.round(s / 60) + ' minutes'
+    : s < 86400 ? Math.round(s / 3600) + ' heures' : s < 31557600 ? Math.round(s / 86400) + ' jours' : s < 3.15576e9 ? Math.round(s / 31557600) + ' ans' : 'Plus de 100 ans';
+
+  function chkTool(p, v) {
+    if (!v) { status(p, 'Entre un mot de passe à tester.', true); return; }
+    status(p, '');
+    let pool = 0; const kinds = [], issues = [];
+    if (/[a-z]/.test(v)) { pool += 26; kinds.push('minuscules'); }
+    if (/[A-Z]/.test(v)) { pool += 26; kinds.push('majuscules'); }
+    if (/\d/.test(v)) { pool += 10; kinds.push('chiffres'); }
+    if (/[^A-Za-z0-9]/.test(v)) { pool += 33; kinds.push('symboles'); }
+    let bits = v.length * Math.log2(pool || 1);
+    const COMMON = ['123456', 'password', 'azerty', 'qwerty', 'motdepasse', 'admin', '000000', '111111', 'iloveyou', 'doudou', 'soleil', 'bonjour'];
+    if (COMMON.some(c => v.toLowerCase().indexOf(c) !== -1)) { bits = Math.min(bits, 20); issues.push('Contient un mot de passe très courant'); }
+    if (/(.)\1{2,}/.test(v)) { bits *= 0.8; issues.push('Caractères répétés'); }
+    if (/(0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef)/i.test(v)) { bits *= 0.8; issues.push('Suite de caractères prévisible'); }
+    if (v.length < 12) issues.push('Court : 12 caractères ou plus conseillés');
+    if (kinds.length < 3) issues.push('Mélange plus de types de caractères');
+    bits = Math.round(bits);
+    render(p, bits < 40 ? 'Faible' : bits < 60 ? 'Moyen' : bits < 80 ? 'Fort' : 'Très fort', 'Estimation, pas une garantie',
+      [['Longueur', v.length + ' caractères'], ['Types utilisés', kinds.join(', ')], ['Entropie estimée', bits + ' bits'],
+       ['Temps pour le casser', humanTime(Math.pow(2, bits) / 2 / 1e10) + ' (attaque hors ligne rapide)'], ['À améliorer', issues.join('\n') || 'Rien de particulier']]);
+  }
+
+  /* ---------- Fuseaux horaires ---------- */
+  const TZ = [['Paris', 'Europe/Paris'], ['Londres', 'Europe/London'], ['New York', 'America/New_York'], ['Los Angeles', 'America/Los_Angeles'],
+    ['Montréal', 'America/Toronto'], ['Martinique', 'America/Martinique'], ['La Réunion', 'Indian/Reunion'], ['Casablanca', 'Africa/Casablanca'],
+    ['Alger', 'Africa/Algiers'], ['Dubaï', 'Asia/Dubai'], ['Tokyo', 'Asia/Tokyo'], ['Sydney', 'Australia/Sydney']];
+
+  function tzTool(p, v) {
+    const d = v ? new Date(v) : new Date();
+    if (isNaN(d)) { status(p, 'Date invalide.', true); return; }
+    status(p, '');
+    const f = z => new Intl.DateTimeFormat('fr-FR', { timeZone: z, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
+    const mine = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    render(p, 'Heure dans le monde', 'Base : ' + (v ? 'date saisie' : 'maintenant') + ' (' + mine + ')',
+      [['Ton fuseau', f(mine)], ['UTC', f('UTC')]].concat(TZ.map(x => [x[0], f(x[1])])));
+  }
+
+  /* ---------- Couleur ---------- */
+  function colTool(p, raw) {
+    const s = raw.trim().toLowerCase(); let r, g, b, m;
+    if ((m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/))) {
+      let h = m[1]; if (h.length === 3) h = h.replace(/./g, '$&$&');
+      r = parseInt(h.slice(0, 2), 16); g = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
+    } else if ((m = s.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/))) { r = +m[1]; g = +m[2]; b = +m[3]; }
+    if (r === undefined || r > 255 || g > 255 || b > 255) { status(p, 'Couleur invalide. Exemples : #4fd1c5 ou rgb(79, 209, 197).', true); return; }
+    status(p, '');
+    const R = r / 255, G = g / 255, B = b / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, dl = mx - mn;
+    let h = 0, sat = 0;
+    if (dl) { sat = dl / (1 - Math.abs(2 * l - 1)); h = mx === R ? ((G - B) / dl) % 6 : mx === G ? (B - R) / dl + 2 : (R - G) / dl + 4; h = Math.round(h * 60); if (h < 0) h += 360; }
+    const lin = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const L = 0.2126 * lin(R) + 0.7152 * lin(G) + 0.0722 * lin(B);
+    const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    render(p, hex, null, [['RGB', 'rgb(' + r + ', ' + g + ', ' + b + ')'], ['HSL', 'hsl(' + h + ', ' + Math.round(sat * 100) + '%, ' + Math.round(l * 100) + '%)'],
+      ['Contraste sur blanc', (1.05 / (L + 0.05)).toFixed(2) + ' : 1'], ['Contraste sur noir', ((L + 0.05) / 0.05).toFixed(2) + ' : 1']]);
+    const res = $('.result', p), sw = mk('div');
+    sw.style.cssText = 'height:56px;border-radius:10px;border:1px solid var(--line);margin-bottom:14px;background:' + hex;
+    res.insertBefore(sw, res.firstChild);
+  }
+
+  /* ---------- Texte ---------- */
+  function txtTool(p, v) {
+    if (!v) { status(p, 'Colle un texte à analyser.', true); return; }
+    status(p, '');
+    const words = (v.match(/\S+/g) || []).length, cut = x => x.length > 200 ? x.slice(0, 200) + '…' : x;
+    const slug = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    render(p, 'Analyse du texte', null,
+      [['Caractères', v.length], ['Sans espaces', v.replace(/\s/g, '').length], ['Mots', words], ['Phrases', (v.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length],
+       ['Lignes', v.split(/\n/).length], ['Temps de lecture', Math.max(1, Math.round(words / 200)) + ' min'], ['Majuscules', cut(v.toUpperCase())],
+       ['Minuscules', cut(v.toLowerCase())], ['Slug', cut(slug)], ['Inversé', cut(Array.from(v).reverse().join(''))]]);
+  }
+
+  /* ---------- Scan de lien ---------- */
+  function scanTool(p, raw) {
+    let u;
+    try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); }
+    catch (e) { status(p, 'Lien invalide. Colle le lien complet, par exemple https://exemple.com/page.', true); return; }
+    if (!/^https?:$/.test(u.protocol)) { status(p, 'Seuls les liens http et https sont analysés.', true); return; }
+    hide(p); status(p, 'Analyse en cours…');
+    const host = u.hostname, path = u.pathname.toLowerCase(), signals = []; let pts = 0;
+    const add = (n, t) => { pts += n; signals.push(t); };
+    const SHORT = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'is.gd', 'cutt.ly', 'rebrand.ly', 'ow.ly', 'shorturl.at', 'tiny.cc'];
+    if (/\.(pdf|docx?|jpe?g|png|txt)\.(exe|scr|bat|js|vbs)(\/|$)/.test(path)) add(3, 'Double extension déguisée (ex. facture.pdf.exe)');
+    else if (/\.(exe|scr|bat|cmd|msi|apk|jar|vbs|ps1|lnk|hta|dll|docm|xlsm)(\/|$)/.test(path)) add(3, 'Le lien mène à un fichier exécutable ou à macros');
+    else if (/\.(zip|rar|7z|iso|img)(\/|$)/.test(path)) add(1, 'Archive à n’ouvrir qu’avec prudence');
+    if (u.username || u.password) add(3, 'Identifiants dans le lien (phishing courant)');
+    if (V4.test(host) || host.indexOf(':') !== -1) add(2, 'Adresse IP à la place d’un nom de domaine');
+    if (host.indexOf('xn--') !== -1) add(2, 'Caractères spéciaux dans le domaine (risque de faux site)');
+    if (SHORT.indexOf(host) !== -1) add(1, 'Lien raccourci : la vraie destination est cachée');
+    if (host.split('.').length > 4) add(1, 'Beaucoup de sous-domaines');
+    if (u.protocol === 'http:') add(1, 'Connexion non chiffrée (http)');
+    if (/(login|signin|verify|secure|account|update|wallet|gift|free|nitro|airdrop|claim)/.test(host + path)) add(1, 'Mots d’appât courants (login, gift, nitro…)');
+    const reg = host.split('.').slice(-2).join('.');
+    const rd = V4.test(host) ? Promise.resolve(null)
+      : fetch('https://rdap.org/domain/' + encodeURIComponent(reg)).then(r => r.ok ? r.json() : null).catch(() => null);
+    rd.then(w => {
+      let age = 'Inconnu';
+      try {
+        const ev = w.events.find(e => e.eventAction === 'registration');
+        if (ev) {
+          const days = Math.floor((Date.now() - new Date(ev.eventDate)) / 864e5);
+          age = days + ' jours (créé le ' + fdate(ev.eventDate) + ')';
+          if (days < 30) add(2, 'Domaine créé il y a moins de 30 jours');
+          else if (days < 180) add(1, 'Domaine récent (moins de 6 mois)');
+        }
+      } catch (e) { /* RDAP indisponible */ }
+      status(p, '');
+      const level = pts >= 4 ? 'Risque élevé' : pts >= 2 ? 'Risque moyen' : 'Peu de signaux d’alerte';
+      render(p, level, host + ' (le lien n’a pas été ouvert)',
+        [['Signaux', signals.length ? signals.join('\n') : 'Aucun détecté'], ['Âge du domaine', age],
+         ['À savoir', 'Cette analyse ne télécharge pas le lien : seuls les scanners ci-dessous peuvent détecter un malware ou un RAT. Aucun signal ne veut pas dire sûr.']]);
+      const box = mk('div'); box.style.marginTop = '14px';
+      [['VirusTotal', 'https://www.virustotal.com/gui/search/' + encodeURIComponent(u.href)],
+       ['urlscan.io', 'https://urlscan.io/search/#' + encodeURIComponent(host)],
+       ['Google Safe Browsing', 'https://transparencyreport.google.com/safe-browsing/search?url=' + encodeURIComponent(u.href)]].forEach(l => {
+        const a = mk('a', 'map', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.marginRight = '16px'; box.appendChild(a);
+      });
+      $('.result', p).appendChild(box);
+    });
+  }
+
+  /* ---------- 50 outils supplémentaires (registre) ---------- */
+  const fix = n => +Number(n).toPrecision(10);
+  const N = s => { const n = Number(String(s).trim().replace(',', '.')); if (isNaN(n)) throw Error('Nombre invalide.'); return n; };
+  const L = s => s.split(/[,;]\s*|\s+/).filter(Boolean), NS = s => L(s).map(N);
+  const RU = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296, ri = (lo, hi) => lo + Math.floor(RU() * (hi - lo + 1));
+  const CAE = (s, n) => s.replace(/[a-z]/gi, c => { const b = c < 'a' ? 65 : 97; return String.fromCharCode((c.charCodeAt(0) - b + n) % 26 + b); });
+  const conv = tbl => v => {
+    const m = v.trim().match(/^(-?[\d.,]+)\s*(.+)$/); if (!m) throw Error('Format : 5 km');
+    const ks = Object.keys(tbl), k = ks.find(x => x.toLowerCase() === m[2].trim().toLowerCase());
+    if (!k) throw Error('Unité inconnue. Unités : ' + ks.join(', '));
+    return ks.map(j => [j, fix(N(m[1]) * tbl[k] / tbl[j])]);
+  };
+  const MO = {}; 'A .-|B -...|C -.-.|D -..|E .|F ..-.|G --.|H ....|I ..|J .---|K -.-|L .-..|M --|N -.|O ---|P .--.|Q --.-|R .-.|S ...|T -|U ..-|V ...-|W .--|X -..-|Y -.--|Z --..|0 -----|1 .----|2 ..---|3 ...--|4 ....-|5 .....|6 -....|7 --...|8 ---..|9 ----.'.split('|').forEach(x => { MO[x[0]] = x.slice(2); });
+  const NA = 'Alfa Bravo Charlie Delta Echo Foxtrot Golf Hotel India Juliett Kilo Lima Mike November Oscar Papa Quebec Romeo Sierra Tango Uniform Victor Whiskey Xray Yankee Zulu'.split(' ');
+  const RM = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  const PORTS = { 20: 'FTP (données)', 21: 'FTP', 22: 'SSH', 23: 'Telnet', 25: 'SMTP', 53: 'DNS', 67: 'DHCP', 80: 'HTTP', 110: 'POP3', 123: 'NTP', 143: 'IMAP', 161: 'SNMP', 389: 'LDAP', 443: 'HTTPS', 445: 'SMB', 465: 'SMTPS', 587: 'SMTP (envoi)', 993: 'IMAPS', 995: 'POP3S', 1433: 'SQL Server', 3306: 'MySQL', 3389: 'RDP (bureau à distance)', 5432: 'PostgreSQL', 5900: 'VNC', 6379: 'Redis', 8080: 'HTTP alternatif', 25565: 'Minecraft', 27017: 'MongoDB', 30120: 'FiveM' };
+  const HTTPC = { 200: 'OK', 201: 'Créé', 204: 'Pas de contenu', 301: 'Déplacé définitivement', 302: 'Redirection temporaire', 304: 'Non modifié', 400: 'Requête invalide', 401: 'Non authentifié', 403: 'Accès interdit', 404: 'Introuvable', 405: 'Méthode non autorisée', 408: 'Délai dépassé', 409: 'Conflit', 410: 'Définitivement supprimé', 418: 'Je suis une théière', 429: 'Trop de requêtes', 500: 'Erreur interne du serveur', 502: 'Mauvaise passerelle', 503: 'Service indisponible', 504: 'Délai de la passerelle dépassé' };
+  const DT = s => { const d = new Date(s.trim() + 'T00:00:00'); if (isNaN(d)) throw Error('Date invalide. Format : 2026-12-31'); return d; };
+  const FD = d => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const draw = (k, n) => { const s = new Set(); while (s.size < k) s.add(ri(1, n)); return Array.from(s).sort((a, b) => a - b).join(' – '); };
+  const csv = v => v.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  const GT = 'Texte', GC = 'Calculs', GV = 'Convertisseurs', GD = 'Dates', GW = 'Web et dev', GX = 'Divers';
+
+  const EXTRA = [
+    ['caesar', 'Chiffre de César', GT, 'Chiffre un texte par décalage de lettres.', 'texte | décalage (ex. bonjour | 3)', v => { const a = v.split('|'), n = (((a[1] ? N(a[1]) : 3) % 26) + 26) % 26; return [['Chiffré', CAE(a[0].trim(), n)], ['Déchiffré', CAE(a[0].trim(), 26 - n)]]; }],
+    ['rot13', 'ROT13', GT, 'Applique ROT13 (le même appel chiffre et déchiffre).', 'Texte', v => [['ROT13', CAE(v, 13)]]],
+    ['morse', 'Code Morse', GT, 'Texte vers Morse, ou Morse vers texte (mots séparés par /).', 'Ex. SOS ou ... --- ...', v => /^[.\-\/\s]+$/.test(v) ? [['Texte', v.trim().split(/\s*\/\s*/).map(w => w.split(/\s+/).map(c => Object.keys(MO).find(k => MO[k] === c) || '?').join('')).join(' ')]] : [['Morse', v.normalize('NFD').toUpperCase().split('').map(c => c === ' ' ? '/' : MO[c]).filter(Boolean).join(' ')]]],
+    ['palin', 'Palindrome', GT, 'Vérifie si un texte se lit pareil dans les deux sens.', 'Ex. Esope reste ici et se repose', v => { const s = v.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, ''); return [['Palindrome', s && s === Array.from(s).reverse().join('') ? 'Oui' : 'Non']]; }],
+    ['freq', 'Fréquences', GT, 'Lettres et mots les plus fréquents.', 'Colle un texte', v => { const c = {}, w = {}; (v.toLowerCase().match(/\p{L}/gu) || []).forEach(x => { c[x] = (c[x] || 0) + 1; }); (v.toLowerCase().match(/\p{L}+/gu) || []).forEach(x => { w[x] = (w[x] || 0) + 1; }); const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(x => x[0] + ' : ' + x[1]).join('\n'); return [['Lettres', top(c, 8)], ['Mots', top(w, 5)]]; }],
+    ['case', 'Casse du texte', GT, 'camelCase, snake_case, kebab-case et autres.', 'Ex. mon super projet', v => { const w = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [], cap = s => s[0].toUpperCase() + s.slice(1); return [['camelCase', w.map((x, i) => i ? cap(x) : x).join('')], ['PascalCase', w.map(cap).join('')], ['snake_case', w.join('_')], ['kebab-case', w.join('-')], ['CONSTANT_CASE', w.join('_').toUpperCase()], ['Titre', v.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase())]]; }],
+    ['rmacc', 'Retirer les accents', GT, 'Supprime les accents d’un texte.', 'Ex. éléphant à l’été', v => [['Sans accents', v.normalize('NFD').replace(/[\u0300-\u036f]/g, '')]]],
+    ['dedup', 'Doublons', GT, 'Retire les doublons d’une liste de mots.', 'a, b, a, c, b', v => { const a = L(v), u = Array.from(new Set(a)); return [['Uniques', u.join(', ')], ['Éléments', a.length + ' → ' + u.length]]; }],
+    ['nato', 'Alphabet OTAN', GT, 'Épelle un mot avec l’alphabet phonétique.', 'Ex. Paris', v => [['Épellation', v.toLowerCase().normalize('NFD').replace(/[^a-z\s]/g, '').split('').map(c => c === ' ' ? '/' : NA[c.charCodeAt(0) - 97]).join(' ')]]],
+    ['roman', 'Chiffres romains', GT, 'Nombre vers romain, ou romain vers nombre.', 'Ex. 2026 ou MMXXVI', v => { if (/^[ivxlcdm]+$/i.test(v)) { let s = v.toUpperCase(), n = 0; RM.forEach(r => { while (s.startsWith(r[1])) { n += r[0]; s = s.slice(r[1].length); } }); return [['Nombre', n]]; } let n = N(v), o = ''; if (n < 1 || n > 3999 || n % 1) throw Error('Entre un entier de 1 à 3999 ou des chiffres romains.'); RM.forEach(r => { while (n >= r[0]) { o += r[1]; n -= r[0]; } }); return [['Romain', o]]; }],
+
+    ['base', 'Bases numériques', GC, 'Convertit un entier en binaire, octal et hexadécimal.', 'Ex. 255, 0xFF ou 0b1010', v => { const s = v.trim().toLowerCase(), n = /^0x/.test(s) ? parseInt(s.slice(2), 16) : /^0b/.test(s) ? parseInt(s.slice(2), 2) : /^0o/.test(s) ? parseInt(s.slice(2), 8) : N(s); if (!Number.isInteger(n)) throw Error('Entre un entier (ex. 255, 0xFF, 0b1010).'); return [['Décimal', n], ['Binaire', n.toString(2)], ['Octal', n.toString(8)], ['Hexadécimal', n.toString(16).toUpperCase()]]; }],
+    ['prime', 'Nombre premier', GC, 'Teste un nombre et donne ses facteurs premiers.', 'Ex. 360', v => { const n = N(v); if (!Number.isInteger(n) || n < 2 || n > 1e12) throw Error('Entre un entier entre 2 et 10^12.'); const f = []; let m = n; for (let d = 2; d * d <= m; d++) while (m % d === 0) { f.push(d); m /= d; } if (m > 1) f.push(m); return [['Premier', f.length === 1 ? 'Oui' : 'Non'], ['Facteurs premiers', f.join(' × ')]]; }],
+    ['pgcd', 'PGCD et PPCM', GC, 'Plus grand diviseur et plus petit multiple communs.', 'Ex. 12, 18', v => { const a = NS(v); if (a.length < 2) throw Error('Entre au moins deux entiers : 12, 18'); const g = (x, y) => y ? g(y, x % y) : Math.abs(x); return [['PGCD', a.reduce(g)], ['PPCM', a.reduce((x, y) => Math.abs(x * y) / g(x, y))]]; }],
+    ['fibo', 'Suite de Fibonacci', GC, 'Calcule le n-ième terme (jusqu’à 1000).', 'Ex. 50', v => { const n = N(v); if (!Number.isInteger(n) || n < 0 || n > 1000) throw Error('Entre un entier de 0 à 1000.'); let a = 0n, b = 1n; for (let i = 0; i < n; i++) { const t = a + b; a = b; b = t; } return [['F(' + n + ')', a.toString()]]; }],
+    ['stats', 'Statistiques', GC, 'Moyenne, médiane, écart-type d’une série.', 'Ex. 12, 15, 9, 20', v => { const a = NS(v).sort((x, y) => x - y); if (!a.length) throw Error('Entre des nombres séparés par des virgules.'); const s = a.reduce((x, y) => x + y, 0), m = s / a.length, h = a.length / 2, md = a.length % 2 ? a[(a.length - 1) / 2] : (a[h - 1] + a[h]) / 2; return [['Quantité', a.length], ['Somme', fix(s)], ['Moyenne', fix(m)], ['Médiane', fix(md)], ['Min / Max', a[0] + ' / ' + a[a.length - 1]], ['Écart-type', fix(Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length))]]; }],
+    ['pct', 'Pourcentages', GC, 'Pourcentage d’un nombre, variation, hausse et baisse.', 'Ex. 20, 150', v => { const r = NS(v), a = r[0], b = r[1]; if (b === undefined) throw Error('Format : 20, 150'); return [[a + ' % de ' + b, fix(a * b / 100)], [a + ' en % de ' + b, b ? fix(a / b * 100) + ' %' : '-'], ['Variation de ' + a + ' à ' + b, a ? fix((b - a) / a * 100) + ' %' : '-'], [b + ' + ' + a + ' %', fix(b * (1 + a / 100))], [b + ' − ' + a + ' %', fix(b * (1 - a / 100))]]; }],
+    ['eq2', 'Équation du 2nd degré', GC, 'Résout ax² + bx + c = 0.', 'a, b, c (ex. 1, -3, 2)', v => { const r = NS(v), a = r[0], b = r[1], c = r[2]; if (c === undefined || !a) throw Error('Format : a, b, c (a différent de 0)'); const d = b * b - 4 * a * c; return [['Discriminant', fix(d)], ['Solutions', d > 0 ? 'x₁ = ' + fix((-b + Math.sqrt(d)) / (2 * a)) + '\nx₂ = ' + fix((-b - Math.sqrt(d)) / (2 * a)) : d === 0 ? 'x = ' + fix(-b / (2 * a)) : 'Aucune solution réelle']]; }],
+    ['rand', 'Nombre aléatoire', GC, 'Tire un nombre dans un intervalle (1 à 100 par défaut).', 'min, max (ex. 1, 6)', v => { const r = NS(v), a = r.length ? r[0] : 1, b = r.length > 1 ? r[1] : 100, lo = Math.min(a, b), hi = Math.max(a, b); return [['Nombre', ri(lo, hi)], ['Intervalle', lo + ' à ' + hi]]; }],
+    ['tva', 'TVA', GC, 'Passe du HT au TTC (20 % par défaut).', 'montant, taux (ex. 100, 20)', v => { const r = NS(v), ht = r[0], t = r[1] === undefined ? 20 : r[1]; if (ht === undefined) throw Error('Entre un montant.'); return [['HT', fix(ht)], ['TVA (' + t + ' %)', fix(ht * t / 100)], ['TTC', fix(ht * (1 + t / 100))], ['Si ' + ht + ' est TTC, le HT vaut', fix(ht / (1 + t / 100))]]; }],
+    ['interest', 'Intérêts composés', GC, 'Calcule un capital placé sur plusieurs années.', 'capital, taux %, années (ex. 1000, 3, 10)', v => { const r = NS(v), c = r[0], t = r[1], n = r[2]; if (n === undefined) throw Error('Format : capital, taux %, années'); const f = c * Math.pow(1 + t / 100, n); return [['Capital final', fix(f)], ['Intérêts gagnés', fix(f - c)], ['Rendement total', fix((f / c - 1) * 100) + ' %']]; }],
+
+    ['len', 'Longueurs', GV, 'Unités : m, km, cm, mm, mi, yd, ft, in, nmi.', 'Ex. 5 km', conv({ m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254, nmi: 1852 })],
+    ['mass', 'Masses', GV, 'Unités : kg, g, mg, t, lb, oz.', 'Ex. 70 kg', conv({ kg: 1, g: 0.001, mg: 1e-6, t: 1000, lb: 0.45359237, oz: 0.028349523 })],
+    ['tmp', 'Températures', GV, 'Celsius, Fahrenheit et Kelvin.', 'Ex. 25 C, 77 F ou 300 K', v => { const m = v.trim().match(/^(-?[\d.,]+)\s*°?\s*([cfk])$/i); if (!m) throw Error('Format : 25 C, 77 F ou 300 K'); const x = N(m[1]), u = m[2].toLowerCase(), c = u === 'c' ? x : u === 'f' ? (x - 32) * 5 / 9 : x - 273.15; return [['Celsius', fix(c) + ' °C'], ['Fahrenheit', fix(c * 9 / 5 + 32) + ' °F'], ['Kelvin', fix(c + 273.15) + ' K']]; }],
+    ['vol', 'Volumes', GV, 'Unités : l, ml, cl, m3, gal, cup, floz.', 'Ex. 2 l', conv({ l: 1, ml: 0.001, cl: 0.01, m3: 1000, gal: 3.785411784, cup: 0.2365882365, floz: 0.0295735296 })],
+    ['spd', 'Vitesses', GV, 'Unités : m/s, km/h, mph, kn.', 'Ex. 130 km/h', conv({ 'm/s': 1, 'km/h': 1 / 3.6, mph: 0.44704, kn: 0.514444 })],
+    ['area', 'Surfaces', GV, 'Unités : m2, km2, ha, ft2, ac.', 'Ex. 2 ha', conv({ m2: 1, km2: 1e6, ha: 1e4, ft2: 0.09290304, ac: 4046.8564224 })],
+    ['dat', 'Taille de données', GV, 'Unités : o, Ko, Mo, Go, To (1000) et Kio, Mio, Gio (1024).', 'Ex. 512 Mo', conv({ o: 1, Ko: 1e3, Mo: 1e6, Go: 1e9, To: 1e12, Kio: 1024, Mio: 1048576, Gio: 1073741824 })],
+    ['tim', 'Durées', GV, 'Unités : s, min, h, j, sem, an.', 'Ex. 90 min', conv({ s: 1, min: 60, h: 3600, j: 86400, sem: 604800, an: 31557600 })],
+    ['ang', 'Angles', GV, 'Unités : deg, rad, grad.', 'Ex. 90 deg', conv({ deg: 1, rad: 180 / Math.PI, grad: 0.9 })],
+
+    ['age', 'Calcul d’âge', GD, 'Âge exact à partir d’une date de naissance.', 'AAAA-MM-JJ (ex. 2000-05-14)', v => { const b = DT(v), t = new Date(); let y = t.getFullYear() - b.getFullYear(), m = t.getMonth() - b.getMonth(), d = t.getDate() - b.getDate(); if (d < 0) { m--; d += new Date(t.getFullYear(), t.getMonth(), 0).getDate(); } if (m < 0) { y--; m += 12; } if (y < 0) throw Error('Cette date est dans le futur.'); return [['Âge', y + ' ans, ' + m + ' mois, ' + d + ' jours'], ['Jours vécus', Math.floor((t - b) / 864e5)], ['Né un', FD(b)]]; }],
+    ['diff', 'Écart entre deux dates', GD, 'Jours entre deux dates (ou jusqu’à aujourd’hui avec une seule).', 'AAAA-MM-JJ, AAAA-MM-JJ', v => { const r = L(v); if (!r[0]) throw Error('Format : 2026-01-01, 2026-12-31'); const a = DT(r[0]), b = r[1] ? DT(r[1]) : new Date(new Date().toDateString()), j = Math.round((b - a) / 864e5); return [['Jours', j], ['Semaines', fix(j / 7)], ['Mois (approx.)', fix(j / 30.44)]]; }],
+    ['addd', 'Ajouter des jours', GD, 'Ajoute ou retire des jours à une date.', 'date, jours (ex. 2026-01-01, 30)', v => { const r = L(v); if (r.length < 2) throw Error('Format : 2026-01-01, 30'); const d = DT(r[0]); d.setDate(d.getDate() + N(r[1])); return [['Résultat', FD(d)]]; }],
+    ['dow', 'Jour de la semaine', GD, 'Jour, quantième et semaine ISO d’une date.', 'AAAA-MM-JJ', v => { const d = DT(v), t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return [['Jour', FD(d)], ['Jour de l’année', Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5)], ['Semaine ISO', Math.ceil(((t - y0) / 864e5 + 1) / 7)]]; }],
+    ['ts', 'Timestamp Unix', GD, 'Convertit un timestamp en date, ou l’inverse. Vide = maintenant.', 'Ex. 1700000000 ou 2026-01-01 12:00', v => { const s = v.trim(); if (/^\d{9,13}$/.test(s)) { const d = new Date(s.length > 10 ? +s : s * 1000); return [['Date locale', d.toLocaleString('fr-FR')], ['UTC', d.toUTCString()]]; } const d = s ? new Date(s) : new Date(); if (isNaN(d)) throw Error('Entre un timestamp ou une date (2026-01-01 12:00).'); return [['Timestamp (s)', Math.floor(d / 1000)], ['Timestamp (ms)', d.getTime()]]; }],
+    ['zodiac', 'Signe astrologique', GD, 'Signe du zodiaque d’une date de naissance.', 'AAAA-MM-JJ', v => { const d = DT(v), m = d.getMonth() + 1, j = d.getDate(); let r = 'Capricorne'; [[1, 20, 'Verseau'], [2, 19, 'Poissons'], [3, 21, 'Bélier'], [4, 20, 'Taureau'], [5, 21, 'Gémeaux'], [6, 21, 'Cancer'], [7, 23, 'Lion'], [8, 23, 'Vierge'], [9, 23, 'Balance'], [10, 23, 'Scorpion'], [11, 22, 'Sagittaire'], [12, 22, 'Capricorne']].forEach(s => { if (m > s[0] || (m === s[0] && j >= s[1])) r = s[2]; }); return [['Signe', r]]; }],
+
+    ['json', 'JSON', GW, 'Valide, indente et minifie du JSON.', '{"nom":"test","ok":true}', v => { let o; try { o = JSON.parse(v); } catch (e) { throw Error('JSON invalide : ' + e.message); } return [['Valide', 'Oui'], ['Indenté', JSON.stringify(o, null, 2)], ['Minifié', JSON.stringify(o)]]; }],
+    ['jwt', 'Décodeur JWT', GW, 'Lit le contenu d’un JWT (la signature n’est pas vérifiée).', 'Colle un JWT', v => { const p = v.trim().split('.'); if (p.length < 2) throw Error('Ce n’est pas un JWT (parties séparées par des points).'); const dec = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''))); }; let h, pl; try { h = dec(p[0]); pl = dec(p[1]); } catch (e) { throw Error('JWT illisible.'); } const r = [['En-tête', JSON.stringify(h, null, 2)], ['Contenu', JSON.stringify(pl, null, 2)], ['Signature', 'Non vérifiée ici']]; if (pl.exp) r.push(['Expire le', new Date(pl.exp * 1000).toLocaleString('fr-FR') + (pl.exp * 1000 < Date.now() ? ' (expiré)' : '')]); return r; }],
+    ['html', 'Échappement HTML', GW, 'Échappe ou déséchappe du HTML.', '<b>texte</b> & plus', v => [['Échappé', v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')], ['Déséchappé', v.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&')]]],
+    ['regex', 'Testeur de regex', GW, 'Teste une expression régulière sur un texte.', 'motif | texte (ex. \\d+ | abc 123 def 45)', v => { const i = v.indexOf('|'); if (i < 0) throw Error('Format : motif | texte'); let re; try { re = new RegExp(v.slice(0, i).trim(), 'g'); } catch (e) { throw Error('Expression régulière invalide.'); } const m = v.slice(i + 1).trim().match(re) || []; return [['Correspondances', m.length], ['Résultats', m.slice(0, 20).join('\n')]]; }],
+    ['ascii', 'Codes Unicode', GW, 'Code Unicode et décimal de chaque caractère.', 'Ex. Aé€', v => Array.from(v).slice(0, 30).map(c => [c, 'U+' + c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0') + ' · ' + c.codePointAt(0)])],
+    ['port', 'Ports réseau', GW, 'Service associé à un numéro de port.', 'Ex. 443', v => { const n = N(v); if (!Number.isInteger(n) || n < 0 || n > 65535) throw Error('Entre un port entre 0 et 65535.'); return [['Port', n], ['Service courant', PORTS[n] || 'Non répertorié'], ['Plage', n < 1024 ? 'Port système (0–1023)' : n < 49152 ? 'Port enregistré' : 'Port dynamique']]; }],
+    ['http', 'Codes HTTP', GW, 'Signification d’un code de réponse HTTP.', 'Ex. 404', v => { const c = v.trim(); return [['Code', c], ['Signification', HTTPC[c] || 'Code non répertorié'], ['Famille', { 1: 'Information', 2: 'Succès', 3: 'Redirection', 4: 'Erreur client', 5: 'Erreur serveur' }[c[0]] || '?']]; }],
+    ['hash', 'Empreintes SHA', GW, 'SHA-256, SHA-384 et SHA-512 d’un texte (HTTPS requis).', 'Texte à hacher', v => { if (!v) throw Error('Entre un texte.'); if (!(window.crypto && crypto.subtle)) throw Error('Nécessite HTTPS (ex. GitHub Pages).'); const b = new TextEncoder().encode(v); return Promise.all(['SHA-256', 'SHA-384', 'SHA-512'].map(a => crypto.subtle.digest(a, b).then(h => [a, Array.from(new Uint8Array(h), x => x.toString(16).padStart(2, '0')).join('')]))); }],
+
+    ['uuid', 'Générateur d’UUID', GX, 'Génère un identifiant UUID v4 (HTTPS requis).', 'Appuie sur Valider', () => { if (!crypto.randomUUID) throw Error('Nécessite HTTPS (ex. GitHub Pages).'); return [['UUID v4', crypto.randomUUID()]]; }],
+    ['coin', 'Pile ou face', GX, 'Lance une pièce.', 'Appuie sur Valider', () => [['Résultat', RU() < 0.5 ? 'Pile' : 'Face']]],
+    ['dice', 'Lancer de dés', GX, 'Notation classique : nombre de dés, d, faces.', 'Ex. 2d6', v => { const m = (v.trim() || '1d6').match(/^(\d{1,2})d(\d{1,3})$/i); if (!m) throw Error('Format : 2d6 (dés, faces)'); const r = Array.from({ length: +m[1] }, () => ri(1, +m[2])); return [['Jets', r.join(', ')], ['Total', r.reduce((a, b) => a + b, 0)]]; }],
+    ['pick', 'Tirage au sort', GX, 'Choisit un élément au hasard dans une liste.', 'Ex. pizza, sushi, burger', v => { const a = csv(v); if (a.length < 2) throw Error('Entre au moins deux choix séparés par des virgules.'); return [['Tirage', a[ri(0, a.length - 1)]]]; }],
+    ['shuf', 'Mélanger une liste', GX, 'Mélange l’ordre d’une liste.', 'Ex. Ana, Karim, Léa, Tom', v => { const a = csv(v); if (a.length < 2) throw Error('Entre au moins deux éléments séparés par des virgules.'); for (let i = a.length - 1; i > 0; i--) { const j = ri(0, i), t = a[i]; a[i] = a[j]; a[j] = t; } return [['Ordre', a.map((x, i) => (i + 1) + '. ' + x).join('\n')]]; }],
+    ['loto', 'Tirage Loto', GX, 'Grille aléatoire : 5 numéros sur 49 et 1 numéro chance.', 'Appuie sur Valider', () => [['Numéros', draw(5, 49)], ['N° chance', ri(1, 10)]]],
+    ['euro', 'Tirage EuroMillions', GX, 'Grille aléatoire : 5 numéros sur 50 et 2 étoiles.', 'Appuie sur Valider', () => [['Numéros', draw(5, 50)], ['Étoiles', draw(2, 12)]]]
+  ];
+
+  (function () {
+    const mn = $('#menu'), ft = $('footer'); let last = '';
+    EXTRA.forEach(x => {
+      if (x[2] !== last) { last = x[2]; mn.appendChild(mk('p', 'mh', last)); }
+      const b = mk('button', '', x[1]); b.dataset.tab = x[0]; b.setAttribute('aria-current', 'false'); mn.appendChild(b);
+      const sec = mk('section', 'panel'); sec.id = 'p-' + x[0]; sec.hidden = true; sec.setAttribute('role', 'tabpanel');
+      const f = mk('form'), i = mk('input'), s = mk('p', 'status'), r = mk('div', 'result');
+      f.dataset.tool = x[0]; i.placeholder = x[4]; i.setAttribute('aria-label', x[1]); i.autocomplete = 'off'; i.spellcheck = false;
+      s.setAttribute('role', 'status'); s.setAttribute('aria-live', 'polite'); r.hidden = true;
+      f.appendChild(i); f.appendChild(mk('button', 'primary', 'Valider'));
+      sec.appendChild(mk('p', 'hint', x[3])); sec.appendChild(f); sec.appendChild(s); sec.appendChild(r);
+      ft.parentNode.insertBefore(sec, ft);
+    });
+  })();
+
+  /* ---------- Câblage ---------- */
+  const TOOLS = { ip: ipTool, tel: telTool, mail: mailTool, dom: domTool, net: netTool, dev: devTool, url: urlTool, enc: encTool, pwd: pwdTool, chk: chkTool, tz: tzTool, col: colTool, txt: txtTool, scan: scanTool };
+  EXTRA.forEach(x => {
+    TOOLS[x[0]] = (p, v) => {
+      Promise.resolve().then(() => x[5](v)).then(r => { status(p, ''); render(p, x[1], null, r); })
+        .catch(e => { status(p, e.message, true); hide(p); });
+    };
+  });
+  document.querySelectorAll('form').forEach(f => {
+    const p = f.closest('.panel');
+    f.addEventListener('submit', e => {
+      e.preventDefault();
+      const i = $('input, textarea', f); TOOLS[f.dataset.tool](p, i ? i.value.trim() : '');
+    });
+  });
+  $('[data-me]').addEventListener('click', () => { const f = $('#p-ip form'); $('input', f).value = ''; ipTool($('#p-ip'), ''); });
+
+  const burger = $('#burger'), menu = $('#menu');
+  const items = Array.from(menu.querySelectorAll('button'));
+  items.forEach((b, i) => b.style.setProperty('--i', i + 1));
+  const setMenu = open => {
+    menu.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  };
+  burger.addEventListener('click', () => setMenu(!menu.classList.contains('open')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+  document.addEventListener('click', e => { if (!menu.contains(e.target) && !burger.contains(e.target)) setMenu(false); });
+  items.forEach(t => t.addEventListener('click', () => {
+    items.forEach(x => x.setAttribute('aria-current', x === t ? 'true' : 'false'));
+    document.querySelectorAll('.panel').forEach(x => { x.hidden = x.id !== 'p-' + t.dataset.tab; });
+    $('#current').textContent = t.textContent;
+    setMenu(false);
+  }));
+})();
+</script>
+</body>
+</html>
