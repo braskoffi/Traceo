@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Boîte à outils réseau</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6e7f'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle'%3E%F0%9F%9B%A0%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#0b6e7f">
 <style>
   :root { --bg:#e9f0f3; --card:#fff; --ink:#0f2230; --muted:#5b7080; --line:#c9d6dd; --accent:#0b6e7f; --accent-ink:#fff; --alert:#b3261e; --ok:#1b7f3b; --r:12px; --font:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; }
@@ -72,6 +73,7 @@
   .opt input[type=color] { flex:0 0 48px; width:48px; height:34px; padding:2px; border-radius:calc(var(--r)*.5); }
   .opt input[type=range] { flex:0 0 130px; padding:0; border:0; }
   .opt input[type=checkbox] { flex:0 0 22px; width:22px; height:22px; padding:0; }
+  .opt input[type=text] { flex:0 0 150px; padding:8px; font-size:.85rem; border-radius:calc(var(--r)*.5); }
   .opt select { flex:0 0 150px; padding:8px; font:inherit; font-size:.9rem; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:calc(var(--r)*.7); }
   .ptr { display:flex; justify-content:space-between; align-items:flex-start; color:var(--accent); font-weight:700; font-size:.85rem; margin:-8px 0 8px; }
   .ptr div { display:flex; flex-direction:column; gap:2px; animation:bob 1.4s ease-in-out infinite; }
@@ -117,7 +119,7 @@
   </section>
 
   <section class="panel" id="p-ip" role="tabpanel" hidden>
-    <p class="hint">Localise une adresse IP publique : ville, pays, fournisseur d’accès.</p>
+    <p class="hint">Localise une adresse IP publique : ville, pays, fournisseur d’accès. L’adresse saisie est envoyée au service ipwho.is ; « Ma propre IP » lui transmet aussi la tienne.</p>
     <form novalidate data-tool="ip"><input placeholder="Ex. 8.8.8.8 ou 2001:4860:4860::8888" aria-label="Adresse IP" autocomplete="off" spellcheck="false"><button class="primary">Tracer</button><button type="button" class="ghost" data-me>Ma propre IP</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
@@ -129,13 +131,13 @@
   </section>
 
   <section class="panel" id="p-mail" role="tabpanel" hidden>
-    <p class="hint">Contrôle une adresse e-mail : syntaxe, domaine, serveurs de courrier, adresse jetable.</p>
+    <p class="hint">Contrôle une adresse e-mail : syntaxe, domaine, serveurs de courrier, adresse jetable. Seul le domaine (la partie après @) est envoyé au service dns.google.</p>
     <form novalidate data-tool="mail"><input type="email" placeholder="nom@exemple.com" aria-label="Adresse e-mail" autocomplete="off" spellcheck="false"><button class="primary">Vérifier</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-dom" role="tabpanel" hidden>
-    <p class="hint">Affiche les enregistrements DNS d’un domaine et ses dates d’enregistrement.</p>
+    <p class="hint">Affiche les enregistrements DNS d’un domaine et ses dates d’enregistrement. Le domaine est envoyé aux services dns.google et rdap.org.</p>
     <form novalidate data-tool="dom"><input placeholder="exemple.com" aria-label="Nom de domaine" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
@@ -147,13 +149,13 @@
   </section>
 
   <section class="panel" id="p-dev" role="tabpanel" hidden>
-    <p class="hint">Ce que ton navigateur révèle de ton appareil et de ta connexion.</p>
+    <p class="hint">Ce que ton navigateur révèle de ton appareil et de ta connexion. Ton adresse IP publique est demandée au service ipwho.is.</p>
     <form novalidate data-tool="dev"><button class="primary">Analyser mon appareil</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
 
   <section class="panel" id="p-url" role="tabpanel" hidden>
-    <p class="hint">Décompose un lien et repère les signes typiques d’un faux site.</p>
+    <p class="hint">Décompose un lien et repère les signes typiques d’un faux site. Tout reste dans ton navigateur et le lien n’est jamais ouvert.</p>
     <form novalidate data-tool="url"><input placeholder="https://exemple.com/page?x=1" aria-label="Lien à analyser" autocomplete="off" spellcheck="false"><button class="primary">Analyser</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
@@ -171,7 +173,7 @@
   </section>
 
   <section class="panel" id="p-scan" role="tabpanel" hidden>
-    <p class="hint">Repère les signes d’un lien dangereux sans l’ouvrir, puis vérifie-le sur des scanners de référence.</p>
+    <p class="hint">Repère les signes d’un lien dangereux sans l’ouvrir, puis vérifie-le sur des scanners de référence. Le nom de domaine (pas le lien complet) est envoyé au service rdap.org pour connaître son âge.</p>
     <form novalidate data-tool="scan"><input placeholder="Colle le lien suspect ici" aria-label="Lien suspect" autocomplete="off" spellcheck="false"><button class="primary">Scanner</button></form>
     <p class="status" role="status" aria-live="polite"></p><div class="result" hidden></div>
   </section>
@@ -237,8 +239,34 @@
   const doh = (name, type) => fetch('https://dns.google/resolve?name=' + encodeURIComponent(name) + '&type=' + type).then(r => r.json());
   const netErr = p => status(p, 'Le service ne répond pas. Réessaie dans un instant.', true);
 
+  /* Lien saisi par l'utilisateur : renvoie un objet URL, ou null si ce n'est manifestement pas un lien (espaces, domaine sans point…). */
+  function parseLink(raw) {
+    if (!raw || /\s/.test(raw)) return null;
+    let u;
+    try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); } catch (e) { return null; }
+    const h = u.hostname;
+    return (V4.test(h) || h.indexOf(':') !== -1 || /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9-]{2,}$/i.test(h)) ? u : null;
+  }
+  /* Domaine enregistré (gère quelques extensions à deux niveaux comme .co.uk). */
+  const regDomain = h => { const l = h.split('.'); return (l.length >= 3 && /^(co|com|org|net|gov|ac|edu)$/.test(l[l.length - 2]) && l[l.length - 1].length === 2) ? l.slice(-3).join('.') : l.slice(-2).join('.'); };
+  const SUSP_TLD = /\.(xyz|top|click|link|zip|mov|tk|ml|ga|cf|gq|work|support|rest|icu|cyou|buzz)$/;
+  const BRANDS = ['paypal', 'google', 'microsoft', 'apple', 'amazon', 'netflix', 'facebook', 'instagram', 'discord', 'steam', 'whatsapp', 'binance', 'coinbase', 'orange', 'laposte', 'ameli', 'impots', 'chronopost', 'colissimo'];
+  /* Signaux liés au nom d'hôte : renvoie des triplets [points, texte, ...menaces]. */
+  function hostSignals(host) {
+    const out = [], reg = regDomain(host), label = reg.split('.')[0];
+    if (SUSP_TLD.test(host)) out.push([1, 'Extension de domaine souvent utilisée pour des arnaques (.' + host.split('.').pop() + ')', 'phishing']);
+    if ((host.match(/-/g) || []).length >= 3) out.push([1, 'Beaucoup de tirets dans le nom de domaine', 'phishing']);
+    const body = host.split('.').slice(0, -1).join('.'), norm = body.replace(/0/g, 'o').replace(/1/g, 'l').replace(/3/g, 'e').replace(/5/g, 's');
+    const fake = BRANDS.find(b => norm.indexOf(b) !== -1 && body.indexOf(b) === -1);
+    const misuse = BRANDS.find(b => new RegExp('(^|[.-])' + b + '([.-]|$)').test(host) && label !== b);
+    if (fake) out.push([2, 'Imite le nom d’une marque (' + fake + ') avec des chiffres à la place de lettres', 'phishing', 'stealer']);
+    else if (misuse) out.push([2, 'Nom de marque (' + misuse + ') dans un domaine qui n’est pas le sien', 'phishing', 'stealer']);
+    return out;
+  }
+
   /* ---------- IP ---------- */
   function ipTool(p, v) {
+    hide(p);
     if (v && !validIp(v)) { status(p, 'Adresse IP invalide. Vérifie le format (ex. 8.8.8.8).', true); return; }
     hide(p); status(p, 'Recherche en cours…');
     fetch('https://ipwho.is/' + encodeURIComponent(v)).then(r => r.json()).then(d => {
@@ -274,7 +302,9 @@
       fmt = '+33 ' + nat[0] + ' ' + (nat.slice(1).match(/.{1,2}/g) || []).join(' ');
     } else {
       if (cc === '1') valid = /^\d{10}$/.test(nat);
-      fmt = '+' + cc + ' ' + (nat.match(/.{1,3}/g) || []).join(' ');
+      const g = nat.match(/.{1,3}/g) || [];
+      if (g.length > 1 && g[g.length - 1].length === 1) { g[g.length - 1] = g[g.length - 2].slice(-1) + g[g.length - 1]; g[g.length - 2] = g[g.length - 2].slice(0, -1); }
+      fmt = '+' + cc + ' ' + g.join(' ');
     }
     status(p, note);
     render(p, CC[cc][1] + ' ' + CC[cc][0], fmt,
@@ -379,9 +409,8 @@
 
   /* ---------- Lien (URL) ---------- */
   function urlTool(p, raw) {
-    let u;
-    try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); }
-    catch (e) { status(p, 'Lien invalide. Exemple : https://exemple.com/page?x=1.', true); return; }
+    const u = parseLink(raw);
+    if (!u) { status(p, 'Lien invalide. Exemple : https://exemple.com/page?x=1.', true); return; }
     status(p, '');
     const params = []; u.searchParams.forEach((val, k) => params.push(k + ' = ' + val));
     const host = u.hostname, alerts = [];
@@ -391,6 +420,8 @@
     if (host.split('.').length > 4) alerts.push('Beaucoup de sous-domaines');
     if (u.protocol === 'http:') alerts.push('Connexion non chiffrée (http)');
     if (raw.length > 200) alerts.push('Lien très long');
+    if (!V4.test(host) && host.indexOf(':') === -1) hostSignals(host).forEach(x => alerts.push(x[1]));
+    if (/(login|signin|verify|secure|account|update|wallet|gift|free|nitro|airdrop|claim)/.test(host + u.pathname.toLowerCase())) alerts.push('Mots d’appât courants (login, gift, nitro…) : à surveiller');
     render(p, host, u.protocol === 'https:' ? 'Lien chiffré (https)' : 'Protocole ' + u.protocol.replace(':', ''),
       [['Protocole', u.protocol.replace(':', '')], ['Hôte', host], ['Port', u.port || 'par défaut'], ['Chemin', u.pathname],
        ['Paramètres', params.join('\n')], ['Ancre', u.hash.replace(/^#/, '')], ['Signaux d’alerte', alerts.length ? alerts.join('\n') : 'Aucun détecté']]);
@@ -516,9 +547,8 @@
   };
 
   function scanTool(p, raw) {
-    let u;
-    try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : 'https://' + raw); }
-    catch (e) { status(p, 'Lien invalide. Colle le lien complet, par exemple https://exemple.com/page.', true); return; }
+    const u = parseLink(raw);
+    if (!u) { status(p, 'Lien invalide. Colle le lien complet, par exemple https://exemple.com/page.', true); return; }
     if (!/^https?:$/.test(u.protocol)) { status(p, 'Seuls les liens http et https sont analysés.', true); return; }
     hide(p); status(p, 'Analyse en cours…');
     const host = u.hostname, path = u.pathname.toLowerCase(), signals = []; let pts = 0;
@@ -534,7 +564,8 @@
     if (host.split('.').length > 4) add(1, 'Beaucoup de sous-domaines', 'phishing');
     if (u.protocol === 'http:') add(1, 'Connexion non chiffrée (http)');
     if (/(login|signin|verify|secure|account|update|wallet|gift|free|nitro|airdrop|claim)/.test(host + path)) add(1, 'Mots d’appât courants (login, gift, nitro…)', 'phishing', 'stealer');
-    const reg = host.split('.').slice(-2).join('.');
+    if (!V4.test(host) && host.indexOf(':') === -1) hostSignals(host).forEach(x => add(...x));
+    const reg = regDomain(host);
     const rd = V4.test(host) ? Promise.resolve(null)
       : fetch('https://rdap.org/domain/' + encodeURIComponent(reg)).then(r => r.ok ? r.json() : null).catch(() => null);
     rd.then(w => {
@@ -549,12 +580,13 @@
         }
       } catch (e) { /* RDAP indisponible */ }
       status(p, '');
-      const level = pts >= 4 ? 'Risque élevé' : pts >= 2 ? 'Risque moyen' : 'Peu de signaux d’alerte';
+      const level = pts >= 4 ? 'Risque élevé' : pts >= 2 ? 'Risque moyen' : pts === 1 ? 'Un signe à surveiller' : 'Peu de signaux d’alerte';
       render(p, level, host + ' (le lien n’a pas été ouvert)',
         [['Signaux', signals.length ? signals.join('\n') : 'Aucun détecté'], ['Âge du domaine', age],
          ['Menaces possibles', th.size ? Array.from(th).map(k => GLOSS[k]).join('\n\n') : 'Aucune menace précise repérée.'],
          ['Ce que ça signifie', pts >= 4 ? 'Plusieurs signes typiques d’une arnaque ou d’un fichier piégé. N’ouvre pas le lien, ne télécharge rien et n’entre aucun mot de passe. Si tu l’as déjà ouvert, change tes mots de passe depuis un autre appareil et fais une analyse antivirus.'
            : pts >= 2 ? 'Quelques signes suspects. Passe par le site officiel au lieu de cliquer, et n’entre aucun mot de passe ni donnée bancaire avant d’avoir vérifié le lien sur un scanner.'
+           : pts === 1 ? 'Un seul signe à surveiller (voir la liste ci-dessus) : vérifie la vraie destination avant de cliquer ou de te connecter.'
            : 'Aucun signe évident, mais ça ne prouve pas que le lien est sûr : un site piégé peut avoir l’air normal.'],
          ['À savoir', 'Cette analyse ne télécharge pas le lien. Seuls les scanners ci-dessous peuvent vraiment détecter un malware ou un RAT.']]);
       const box = mk('div'); box.style.marginTop = '14px';
@@ -573,7 +605,7 @@
   }
 
   /* ---------- 50 outils supplémentaires (registre) ---------- */
-  const fix = n => +Number(n).toPrecision(10);
+  const fix = n => { n = Number(n); const a = Math.abs(n); return (!isFinite(n) || a >= 1e15) ? +n.toPrecision(10) : a >= 1 ? +n.toFixed(4) : +n.toPrecision(6); };
   const N = s => { const n = Number(String(s).trim().replace(',', '.')); if (isNaN(n)) throw Error('Nombre invalide.'); return n; };
   const L = s => s.split(/[,;]\s*|\s+/).filter(Boolean), NS = s => L(s).map(N);
   const RU = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296, ri = (lo, hi) => lo + Math.floor(RU() * (hi - lo + 1));
@@ -635,7 +667,7 @@
     ['ts', 'Timestamp Unix', GD, 'Convertit un timestamp en date, ou l’inverse. Vide = maintenant.', 'Ex. 1700000000 ou 2026-01-01 12:00', v => { const s = v.trim(); if (/^\d{9,13}$/.test(s)) { const d = new Date(s.length > 10 ? +s : s * 1000); return [['Date locale', d.toLocaleString('fr-FR')], ['UTC', d.toUTCString()]]; } const d = s ? new Date(s) : new Date(); if (isNaN(d)) throw Error('Entre un timestamp ou une date (2026-01-01 12:00).'); return [['Timestamp (s)', Math.floor(d / 1000)], ['Timestamp (ms)', d.getTime()]]; }],
     ['zodiac', 'Signe astrologique', GD, 'Signe du zodiaque d’une date de naissance.', 'AAAA-MM-JJ', v => { const d = DT(v), m = d.getMonth() + 1, j = d.getDate(); let r = 'Capricorne'; [[1, 20, 'Verseau'], [2, 19, 'Poissons'], [3, 21, 'Bélier'], [4, 20, 'Taureau'], [5, 21, 'Gémeaux'], [6, 21, 'Cancer'], [7, 23, 'Lion'], [8, 23, 'Vierge'], [9, 23, 'Balance'], [10, 23, 'Scorpion'], [11, 22, 'Sagittaire'], [12, 22, 'Capricorne']].forEach(s => { if (m > s[0] || (m === s[0] && j >= s[1])) r = s[2]; }); return [['Signe', r]]; }],
 
-    ['json', 'JSON', GW, 'Valide, indente et minifie du JSON.', '{"nom":"test","ok":true}', v => { let o; try { o = JSON.parse(v); } catch (e) { throw Error('JSON invalide : ' + e.message); } return [['Valide', 'Oui'], ['Indenté', JSON.stringify(o, null, 2)], ['Minifié', JSON.stringify(o)]]; }],
+    ['json', 'JSON', GW, 'Valide, indente et minifie du JSON.', '{"nom":"test","ok":true}', v => { let o; try { o = JSON.parse(v); } catch (e) { const m = /position (\d+)/.exec(e.message || ''); throw Error('JSON invalide' + (m ? ' près du caractère ' + (+m[1] + 1) : '') + '. Vérifie les virgules, guillemets et accolades.'); } return [['Valide', 'Oui'], ['Indenté', JSON.stringify(o, null, 2)], ['Minifié', JSON.stringify(o)]]; }],
     ['jwt', 'Décodeur JWT', GW, 'Lit le contenu d’un JWT (la signature n’est pas vérifiée).', 'Colle un JWT', v => { const p = v.trim().split('.'); if (p.length < 2) throw Error('Ce n’est pas un JWT (parties séparées par des points).'); const dec = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''))); }; let h, pl; try { h = dec(p[0]); pl = dec(p[1]); } catch (e) { throw Error('JWT illisible.'); } const r = [['En-tête', JSON.stringify(h, null, 2)], ['Contenu', JSON.stringify(pl, null, 2)], ['Signature', 'Non vérifiée ici']]; if (pl.exp) r.push(['Expire le', new Date(pl.exp * 1000).toLocaleString('fr-FR') + (pl.exp * 1000 < Date.now() ? ' (expiré)' : '')]); return r; }],
     ['html', 'Échappement HTML', GW, 'Échappe ou déséchappe du HTML.', '<b>texte</b> & plus', v => [['Échappé', v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')], ['Déséchappé', v.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&')]]],
     ['regex', 'Testeur de regex', GW, 'Teste une expression régulière sur un texte.', 'motif | texte (ex. \\d+ | abc 123 def 45)', v => { const i = v.indexOf('|'); if (i < 0) throw Error('Format : motif | texte'); let re; try { re = new RegExp(v.slice(0, i).trim(), 'g'); } catch (e) { throw Error('Expression régulière invalide.'); } const m = v.slice(i + 1).trim().match(re) || []; return [['Correspondances', m.length], ['Résultats', m.slice(0, 20).join('\n')]]; }],
@@ -689,14 +721,90 @@
     ['phrase', 'Phrase de passe', GK, 'Mots aléatoires faciles à retenir (4 par défaut, de 3 à 10).', 'Nombre de mots (ex. 5)', v => { const n = v.trim() ? N(v) : 4; if (!Number.isInteger(n) || n < 3 || n > 10) throw Error('Choisis de 3 à 10 mots.'); const w = 'soleil montagne rivière nuage forêt orange cheval jardin lumière océan étoile pierre vent sable fleur tigre cuisine bateau fusée prairie volcan miroir cerise chemin éclair glacier horizon lanterne marais nuit plume quartz renard saphir tempête violon zèbre abricot balcon cactus dragon ermite falaise gazelle hibou igloo jasmin koala lagune moineau nectar opale panda quiche radis tulipe vallée yacht'.split(' '); return [['Phrase', Array.from({ length: n }, () => w[ri(0, w.length - 1)]).join('-')], ['Entropie', Math.round(n * Math.log2(w.length)) + ' bits (liste courte : pour un compte important, préfère l’outil Mot de passe)']]; }],
     ['qr', 'QR code', GK, 'Crée un QR code. Le texte est envoyé au service qrserver.com.', 'Texte ou lien', v => { if (!v) throw Error('Entre un texte ou un lien.'); if (v.length > 500) throw Error('500 caractères maximum.'); const u = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(v); return [['__img', u], ['Lien de l’image', u]]; }],
     ['tdiff', 'Comparer deux textes', GT, 'Mots ajoutés, retirés et similarité entre deux textes.', 'texte A | texte B', v => { const i = v.indexOf('|'); if (i < 0) throw Error('Format : texte A | texte B'); const w = x => x.toLowerCase().match(/\p{L}[\p{L}\p{N}']*/gu) || [], a = w(v.slice(0, i)), b = w(v.slice(i + 1)), A = new Set(a), B = new Set(b), u = new Set(a.concat(b)), c = Array.from(A).filter(x => B.has(x)); return [['Retirés (dans A seulement)', Array.from(A).filter(x => !B.has(x)).join(', ') || 'Aucun'], ['Ajoutés (dans B seulement)', Array.from(B).filter(x => !A.has(x)).join(', ') || 'Aucun'], ['Similarité', u.size ? Math.round(c.length / u.size * 100) + ' %' : '-']]; }],
-    ['curr', 'Devises', GC, 'Taux du jour de la Banque centrale européenne (service frankfurter.app).', 'Ex. 100 EUR USD', v => { const m = v.trim().toUpperCase().match(/^([\d.,]+)\s*([A-Z]{3})\s*(?:EN|TO|>)?\s*([A-Z]{3})$/); if (!m) throw Error('Format : 100 EUR USD'); const a = N(m[1]); return fetch('https://api.frankfurter.app/latest?amount=' + a + '&from=' + m[2] + '&to=' + m[3]).then(r => { if (!r.ok) throw Error('Devise non prise en charge.'); return r.json(); }).then(d => [[a + ' ' + m[2], fix(d.rates[m[3]]) + ' ' + m[3]], ['Date du taux', d.date]]).catch(e => { throw Error(/Devise/.test(e.message) ? e.message : 'Service injoignable.'); }); }],
-    ['cssg', 'Dégradé CSS', GW, 'Génère le code CSS d’un dégradé.', 'couleur1, couleur2, angle (ex. #ff6b6b, #4ecdc4, 135)', v => { const r = L(v); if (r.length < 2) throw Error('Format : #ff6b6b, #4ecdc4, 135'); return [['CSS', 'background: linear-gradient(' + (r[2] || 135) + 'deg, ' + r[0] + ', ' + r[1] + ');']]; }]
+    ['curr', 'Devises', GC, 'Taux du jour de la Banque centrale européenne (service frankfurter.app).', 'Ex. 100 EUR USD', v => { const m = v.trim().toUpperCase().match(/^([\d.,]+)\s*([A-Z]{3})\s*(?:EN|TO|>)?\s*([A-Z]{3})$/); if (!m) throw Error('Format : 100 EUR USD'); const a = N(m[1]); return fetch('https://api.frankfurter.app/latest?amount=' + a + '&from=' + m[2] + '&to=' + m[3]).then(r => { if (!r.ok) throw Error('Devise non prise en charge.'); return r.json(); }).then(d => { if (!d.rates || d.rates[m[3]] === undefined) throw Error('Devise non prise en charge.'); return [[a + ' ' + m[2], fix(d.rates[m[3]]) + ' ' + m[3]], ['Date du taux', d.date]]; }).catch(e => { throw Error(/Devise/.test(e.message) ? e.message : 'Service injoignable.'); }); }],
+    ['cssg', 'Dégradé CSS', GW, 'Génère le code CSS d’un dégradé.', 'couleur1, couleur2, angle (ex. #ff6b6b, #4ecdc4, 135)', v => { const r = L(v); if (r.length < 2) throw Error('Format : #ff6b6b, #4ecdc4, 135'); return [['CSS', 'background: linear-gradient(' + (r[2] || 135) + 'deg, ' + r[0] + ', ' + r[1] + ');']]; }],
+
+    ['iban', 'Vérifier un IBAN', GK, 'Contrôle la clé et la longueur d’un IBAN (ne prouve pas que le compte existe).', 'Ex. FR76 3000 6000 0112 3456 7890 189', v => { const s = v.replace(/\s/g, '').toUpperCase(); if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s)) throw Error('Format invalide.'); let m = 0; for (const c of (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, x => x.charCodeAt(0) - 55)) m = (m * 10 + Number(c)) % 97; const n = { FR: 27, BE: 16, DE: 22, ES: 24, IT: 27, GB: 22, CH: 21, LU: 20, NL: 18, PT: 25 }[s.slice(0, 2)]; return [['Clé valide', m === 1 ? 'Oui' : 'Non'], ['Pays', s.slice(0, 2)], ['Longueur', s.length + (n ? (s.length === n ? ' (conforme)' : ' (attendu : ' + n + ')') : '')], ['Groupé', s.match(/.{1,4}/g).join(' ')]]; }],
+    ['nir', 'Clé de sécurité sociale', GK, 'Vérifie seulement la clé d’un numéro de 15 chiffres (format, pas l’existence).', '15 chiffres (ex. 1 84 12 76 451 089 46)', v => { const s = v.replace(/\s/g, '').toUpperCase(); if (!/^[12]\d{4}(\d{2}|2A|2B)\d{6}\d{2}$/.test(s)) throw Error('Format attendu : 15 chiffres (2A/2B possibles pour la Corse).'); const k = 97 - Number(BigInt(s.slice(0, 13).replace('2A', '19').replace('2B', '18')) % 97n); return [['Clé valide', k === Number(s.slice(13)) ? 'Oui' : 'Non (clé attendue : ' + String(k).padStart(2, '0') + ')']]; }],
+    ['hours', 'Heures travaillées', GD, 'Durée entre deux heures, pause déduite.', 'début, fin, pause en min (ex. 08:30, 17:15, 60)', v => { const r = L(v), t = x => { const m = (x || '').match(/^(\d{1,2})[:h](\d{2})$/); if (!m) throw Error('Format : 08:30, 17:15, 60'); return +m[1] * 60 + +m[2]; }; let d = t(r[1]) - t(r[0]); if (d < 0) d += 1440; d -= r[2] ? N(r[2]) : 0; if (d < 0) throw Error('Pause trop longue.'); return [['Durée', Math.floor(d / 60) + ' h ' + String(d % 60).padStart(2, '0') + ' min'], ['En décimal', fix(d / 60) + ' h']]; }],
+    ['tzc', 'Heure entre deux villes', GD, 'Convertit une heure d’une ville à une autre (villes de l’outil Fuseaux horaires).', 'heure, ville, ville (ex. 14:00, Paris, Tokyo)', v => { const r = v.split(',').map(x => x.trim()), z = n => { const k = TZ.find(t => t[0].toLowerCase() === (n || '').toLowerCase()); if (!k) throw Error('Ville inconnue. Villes : ' + TZ.map(t => t[0]).join(', ')); return k[1]; }, m = (r[0] || '').match(/^(\d{1,2})[:h](\d{2})$/); if (!m || r.length < 3) throw Error('Format : 14:00, Paris, Tokyo'); const a = z(r[1]), b = z(r[2]), off = (zn, d) => { const f = new Intl.DateTimeFormat('en-US', { timeZone: zn, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(d).reduce((o, x) => { o[x.type] = +x.value; return o; }, {}); return Date.UTC(f.year, f.month - 1, f.day, f.hour, f.minute, f.second) - d.getTime(); }, n = new Date(), loc = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate(), +m[1], +m[2]), u = new Date(loc - off(a, new Date(loc))); return [['Résultat', r[1] + ' ' + r[0] + ' = ' + r[2] + ' ' + new Intl.DateTimeFormat('fr-FR', { timeZone: b, weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(u)]]; }],
+    ['calc', 'Calculatrice', GC, 'Opérateurs + - * / ^ ( ) et fonctions sqrt, sin, cos, tan, log, ln, abs, pi, e.', 'Ex. 2*(3+4)^2 + sqrt(16)', v => { const s = v.toLowerCase().replace(/,/g, '.').replace(/\^/g, '**'); if (!/^[\d\s+\-*/().%]*$/.test(s.replace(/sqrt|sin|cos|tan|log|ln|abs|pi|e/g, ''))) throw Error('Expression non reconnue.'); let r; try { r = new Function('sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'abs', 'pi', 'e', 'return (' + s + ')')(Math.sqrt, Math.sin, Math.cos, Math.tan, Math.log10, Math.log, Math.abs, Math.PI, Math.E); } catch (x) { throw Error('Expression invalide.'); } if (typeof r !== 'number' || !isFinite(r)) throw Error('Résultat impossible.'); return [['Résultat', fix(r)]]; }]
+  ];
+
+  /* ---------- Outils avec interface propre ---------- */
+  const ST = { g: k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }, s: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* stockage indisponible */ } } };
+  const GQ = 'Outils du quotidien';
+  const CUSTOM = [
+    ['timer', 'Minuteur et chronomètre', GQ, 'Minuteur avec alarme sonore, et chronomètre avec pause.', sec => {
+      const d = mk('p', 'place', '00:00:00'), mn = mk('input'), row = mk('div'), sx = mk('p', 'status'); let t0 = 0, acc = 0, run = null, mode = '', end = 0, ac = null;
+      mn.type = 'number'; mn.min = 0; mn.step = 'any'; mn.placeholder = 'Minuteur : minutes (ex. 5)'; mn.setAttribute('aria-label', 'Minutes'); row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:10px 0';
+      sx.setAttribute('role', 'status'); sx.setAttribute('aria-live', 'polite'); d.setAttribute('role', 'timer');
+      const fmt = ms => { const q = Math.floor(ms / 1000); return [Math.floor(q / 3600), Math.floor(q / 60) % 60, q % 60].map(x => String(x).padStart(2, '0')).join(':'); };
+      /* Le contexte audio est créé au clic (geste utilisateur), sinon les navigateurs mobiles bloquent l'alarme. */
+      const unlock = () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) { /* audio indisponible */ } };
+      const beep = () => { try { const c = ac || new (window.AudioContext || window.webkitAudioContext)(); if (c.state === 'suspended') c.resume(); [0, 0.5, 1].forEach(t => { const o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.value = 0.2; o.start(c.currentTime + t); o.stop(c.currentTime + t + 0.3); }); } catch (e) { /* audio indisponible */ } };
+      const stop = () => { clearInterval(run); run = null; };
+      const msg = (t, err) => { sx.textContent = t; sx.className = 'status' + (err ? ' error' : ''); };
+      const tick = () => { if (mode === 't') { const l = end - Date.now(); if (l <= 0) { d.textContent = '00:00:00'; stop(); msg('Temps écoulé !'); beep(); return; } d.textContent = fmt(l + 999); } else d.textContent = fmt(acc + Date.now() - t0); };
+      const b = (t, f) => { const x = mk('button', 'primary', t); x.type = 'button'; x.addEventListener('click', f); row.appendChild(x); return x; };
+      b('Lancer le minuteur', () => { const m = +mn.value; if (!(m > 0)) { msg('Entre un nombre de minutes supérieur à 0.', true); return; } unlock(); stop(); msg(''); bc.textContent = 'Chronomètre'; mode = 't'; end = Date.now() + m * 60000; run = setInterval(tick, 200); tick(); });
+      const bc = b('Chronomètre', () => { msg(''); if (run && mode === 'c') { acc += Date.now() - t0; stop(); bc.textContent = 'Reprendre'; return; } stop(); if (mode !== 'c') acc = 0; mode = 'c'; t0 = Date.now(); run = setInterval(tick, 100); bc.textContent = 'Pause'; });
+      b('Arrêter / zéro', () => { stop(); msg(''); mode = ''; acc = 0; d.textContent = '00:00:00'; bc.textContent = 'Chronomètre'; });
+      sec.appendChild(mn); sec.appendChild(row); sec.appendChild(sx); sec.appendChild(d);
+    }],
+    ['notes', 'Bloc-notes', GQ, 'Écris librement : le texte est enregistré sur cet appareil.', sec => {
+      const t = mk('textarea'); t.rows = 10; t.style.width = '100%'; t.setAttribute('aria-label', 'Bloc-notes'); t.value = ST.g('boite-notes');
+      t.addEventListener('input', () => ST.s('boite-notes', t.value)); sec.appendChild(t);
+    }],
+    ['todo', 'Tâches et courses', GQ, 'Ajoute des éléments, coche-les, supprime-les. Enregistré sur cet appareil.', sec => {
+      let a = []; try { a = JSON.parse(ST.g('boite-todo')) || []; } catch (e) { a = []; }
+      const row = mk('div'), i = mk('input'), ad = mk('button', 'primary', 'Ajouter'), ul = mk('ul'); row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap'; ul.style.cssText = 'list-style:none;padding:0;margin:12px 0 0';
+      i.placeholder = 'Ex. Lait'; i.setAttribute('aria-label', 'Nouvel élément'); ad.type = 'button';
+      const save = () => ST.s('boite-todo', JSON.stringify(a));
+      const draw = () => { ul.textContent = ''; a.forEach((x, k) => {
+        const li = mk('li'), c = mk('input'), sp = mk('span', '', x.t), dl = mk('button', 'ghost', '✕'); c.type = 'checkbox'; c.checked = x.d; dl.type = 'button'; dl.setAttribute('aria-label', 'Supprimer');
+        c.addEventListener('change', () => { x.d = c.checked; save(); draw(); }); dl.addEventListener('click', () => { a.splice(k, 1); save(); draw(); });
+        sp.style.cssText = 'flex:1;' + (x.d ? 'text-decoration:line-through;color:var(--muted)' : ''); li.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)';
+        c.style.cssText = 'flex:0 0 22px;width:22px;height:22px;padding:0'; dl.style.padding = '4px 10px'; li.appendChild(c); li.appendChild(sp); li.appendChild(dl); ul.appendChild(li); }); };
+      const add = () => { const t = i.value.trim(); if (!t) return; a.push({ t: t, d: false }); i.value = ''; save(); draw(); };
+      ad.addEventListener('click', add); i.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+      row.appendChild(i); row.appendChild(ad); sec.appendChild(row); sec.appendChild(ul); draw();
+    }],
+    ['img', 'Convertir et compresser une image', 'Images', 'Convertit, redimensionne et compresse une image (WebP, JPEG, PNG) et en extrait les couleurs principales. Rien n’est envoyé.', sec => {
+      const f = mk('input'), w = mk('input'), fm = mk('select'), q = mk('input'), go = mk('button', 'primary', 'Convertir'), row = mk('div'), sx = mk('p', 'status'), out = mk('div', 'result');
+      f.type = 'file'; f.accept = 'image/*'; f.setAttribute('aria-label', 'Image'); w.type = 'number'; w.min = 16; w.placeholder = 'Largeur max en px (vide = d’origine)'; w.setAttribute('aria-label', 'Largeur maximale');
+      [['image/webp', 'WebP'], ['image/jpeg', 'JPEG'], ['image/png', 'PNG']].forEach(o => { const op = mk('option', '', o[1]); op.value = o[0]; fm.appendChild(op); });
+      q.type = 'range'; q.min = 10; q.max = 100; q.value = 80; q.setAttribute('aria-label', 'Qualité'); q.style.cssText = 'flex:1 1 120px;padding:0;border:0'; go.type = 'button'; out.hidden = true;
+      row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;align-items:center'; fm.style.cssText = 'padding:12px;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:var(--r)';
+      row.appendChild(w); row.appendChild(fm); row.appendChild(mk('span', '', 'Qualité')); row.appendChild(q); row.appendChild(go); sec.appendChild(f); sec.appendChild(row); sec.appendChild(sx); sec.appendChild(out);
+      const err = m => { sx.textContent = m; sx.className = 'status error'; }, kb = n => (n / 1024).toFixed(1) + ' Ko';
+      go.addEventListener('click', () => {
+        const file = f.files[0]; if (!file) { err('Choisis une image.'); return; }
+        sx.textContent = 'Traitement…'; sx.className = 'status'; const im = new Image(), u = URL.createObjectURL(file);
+        im.onerror = () => { err('Image illisible.'); URL.revokeObjectURL(u); };
+        im.onload = () => {
+          const k = Math.min(1, (+w.value || im.naturalWidth) / im.naturalWidth), W = Math.max(1, Math.round(im.naturalWidth * k)), H = Math.max(1, Math.round(im.naturalHeight * k)), c = document.createElement('canvas');
+          c.width = W; c.height = H; const x = c.getContext('2d'); if (fm.value === 'image/jpeg') { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); } x.drawImage(im, 0, 0, W, H); URL.revokeObjectURL(u);
+          const px = x.getImageData(0, 0, W, H).data, bk = {}, step = 4 * Math.max(1, Math.floor(px.length / 80000));
+          for (let j = 0; j < px.length; j += step) { if (px[j + 3] < 128) continue; const key = (px[j] >> 5) + ',' + (px[j + 1] >> 5) + ',' + (px[j + 2] >> 5); bk[key] = (bk[key] || 0) + 1; }
+          const pal = Object.keys(bk).sort((a, b) => bk[b] - bk[a]).slice(0, 5).map(t => '#' + t.split(',').map(n => (n * 32 + 16).toString(16).padStart(2, '0')).join('').toUpperCase());
+          c.toBlob(b => {
+            if (!b) { err('Conversion impossible avec ce navigateur.'); return; }
+            sx.textContent = ''; out.textContent = ''; const ext = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' }[b.type] || 'png', pv = mk('img'), dlk = mk('a', 'map', 'Télécharger (.' + ext + ')'), sw = mk('div');
+            pv.src = URL.createObjectURL(b); pv.alt = 'Aperçu'; pv.style.cssText = 'display:block;max-width:100%;border-radius:8px;margin:0 0 12px'; dlk.href = pv.src; dlk.download = 'image.' + ext; dlk.style.marginRight = '16px';
+            sw.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px'; pal.forEach(h => { const t = mk('span', '', h); t.style.cssText = 'padding:6px 10px;border-radius:8px;border:1px solid var(--line);font-size:.8rem;font-weight:600;background:' + h + ';color:' + (parseInt(h.slice(1, 3), 16) * 0.3 + parseInt(h.slice(3, 5), 16) * 0.6 + parseInt(h.slice(5, 7), 16) * 0.1 > 140 ? '#000' : '#fff'); sw.appendChild(t); });
+            out.appendChild(pv); out.appendChild(mk('p', 'ipline', W + ' × ' + H + ' px · ' + kb(file.size) + ' → ' + kb(b.size))); out.appendChild(dlk); out.appendChild(mk('p', 'hint', 'Couleurs principales :')); out.appendChild(sw); out.hidden = false;
+          }, fm.value, q.value / 100);
+        };
+        im.src = u;
+      });
+    }]
   ];
 
   (function () {
     const mn = $('#menu'), ft = $('footer'), hl = $('#homeList'), GR = {}, GN = 'Réseau et sécurité', GP = 'Pratique';
     const CORE = [['ip', 'IP', GN], ['tel', 'Téléphone', GN], ['mail', 'E-mail', GN], ['dom', 'Domaine', GN], ['net', 'Réseau', GN], ['dev', 'Appareil', GN], ['url', 'Lien (URL)', GN], ['scan', 'Scan de lien', GN], ['enc', 'Encodage', GN], ['pwd', 'Mot de passe', GN], ['chk', 'Test de force', GN], ['tz', 'Fuseaux horaires', GP], ['col', 'Couleur', GP], ['txt', 'Texte', GP]];
-    const REG = CORE.concat(EXTRA.map(x => [x[0], x[1], x[2]]));
+    const REG = CORE.concat(EXTRA.map(x => [x[0], x[1], x[2]]), CUSTOM.map(x => [x[0], x[1], x[2]]));
     REG.forEach(r => { (GR[r[2]] = GR[r[2]] || []).push(r); });
     const mkb = (id, t) => { const b = mk('button', '', t); b.dataset.tab = id; b.setAttribute('aria-current', id === 'home' ? 'true' : 'false'); mn.appendChild(b); };
     mkb('home', 'Accueil');
@@ -710,6 +818,7 @@
       sec.appendChild(mk('p', 'hint', x[3])); sec.appendChild(f); sec.appendChild(s); sec.appendChild(r);
       ft.parentNode.insertBefore(sec, ft);
     });
+    CUSTOM.forEach(x => { const sec = mk('section', 'panel'); sec.id = 'p-' + x[0]; sec.hidden = true; sec.setAttribute('role', 'tabpanel'); sec.appendChild(mk('p', 'hint', x[3])); x[4](sec); ft.parentNode.insertBefore(sec, ft); });
     Object.keys(GR).forEach(g => {
       const d = mk('details', 'grp'), sm = mk('summary', '', g + ' '); d.open = true;
       sm.appendChild(mk('small', '', '· ' + GR[g].length + (GR[g].length > 1 ? ' outils' : ' outil'))); d.appendChild(sm);
@@ -731,7 +840,7 @@
     const p = f.closest('.panel');
     f.addEventListener('submit', e => {
       e.preventDefault();
-      const i = $('input, textarea', f); TOOLS[f.dataset.tool](p, i ? i.value.trim() : '');
+      const i = $('input, textarea', f); hide(p); status(p, ''); TOOLS[f.dataset.tool](p, i ? i.value.trim() : '');
     });
   });
   $('[data-me]').addEventListener('click', () => { const f = $('#p-ip form'); $('input', f).value = ''; ipTool($('#p-ip'), ''); });
@@ -806,7 +915,7 @@
   ];
   const FONTS = { sys: '"Segoe UI",system-ui,-apple-system,Roboto,sans-serif', serif: 'Georgia,"Times New Roman",serif', mono: 'ui-monospace,Consolas,Menlo,monospace', round: '"Trebuchet MS","Comic Sans MS",system-ui,sans-serif' };
   const VARS = ['--bg', '--card', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--alert', '--ok'], CV = { accent: '--accent', bg: '--bg', card: '--card', ink: '--ink' };
-  const DEF = { theme: 0, accent: '', bg: '', card: '', ink: '', font: 'sys', fs: 100, r: 12, w: 680, anim: true, grad: false, sched: false };
+  const DEF = { theme: 0, accent: '', bg: '', card: '', ink: '', font: 'sys', fs: 100, r: 12, w: 680, anim: true, grad: false, sched: false, bgimg: '', gfont: '' };
   const S = Object.assign({}, DEF), KEY = 'boite-outils-prefs', root = document.documentElement;
   try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible */ }
   const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
@@ -826,6 +935,9 @@
     if (S.bg || S.card || S.ink) { set('--muted', 'color-mix(in srgb, var(--ink) 62%, var(--bg))'); set('--line', 'color-mix(in srgb, var(--ink) 22%, var(--bg))'); }
     if (S.accent) { set('--accent', S.accent); set('--accent-ink', inkOn(S.accent)); }
     set('--font', FONTS[S.font] || FONTS.sys); set('--fs', S.fs + '%'); set('--r', S.r + 'px'); set('--w', S.w + 'px');
+    const gf = /^[\w ]{2,40}$/.test(S.gfont || '') ? S.gfont.trim() : '';
+    if (gf) { let l = document.getElementById('gf'); if (!l) { l = document.createElement('link'); l.id = 'gf'; l.rel = 'stylesheet'; document.head.appendChild(l); } const h = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(gf) + '&display=swap'; if (l.href !== h) l.href = h; set('--font', '"' + gf + '",' + (FONTS[S.font] || FONTS.sys)); }
+    const bs = document.body.style; bs.backgroundImage = /^https?:\/\//.test(S.bgimg || '') ? 'url(' + JSON.stringify(S.bgimg) + ')' : ''; bs.backgroundSize = 'cover'; bs.backgroundAttachment = 'fixed';
     root.classList.toggle('noanim', !S.anim); document.body.classList.toggle('grad', !!S.grad);
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* stockage indisponible */ }
   }
@@ -848,6 +960,7 @@
   const sel = mk('select');
   [['sys', 'Système'], ['serif', 'Élégante (serif)'], ['mono', 'Machine (mono)'], ['round', 'Arrondie']].forEach(o => { const op = mk('option', '', o[1]); op.value = o[0]; sel.appendChild(op); });
   put('Police', sel, 'font');
+  put('Police Google (nom)', Object.assign(mi('text'), { placeholder: 'ex. Poppins' }), 'gfont'); put('Image de fond (lien)', Object.assign(mi('text'), { placeholder: 'https://…' }), 'bgimg');
   put('Taille du texte', mi('range', { min: 85, max: 135, step: 5 }), 'fs');
   put('Arrondi des angles', mi('range', { min: 0, max: 28, step: 2 }), 'r');
   put('Largeur de page', mi('range', { min: 480, max: 1000, step: 20 }), 'w');
@@ -859,7 +972,8 @@
   ex.addEventListener('click', () => { const c = JSON.stringify(S); (navigator.clipboard ? navigator.clipboard.writeText(c) : Promise.reject()).then(() => { ex.textContent = 'Code copié ✓'; }, () => { prompt('Copie ce code :', c); }); });
   im.addEventListener('click', () => { const c = prompt('Colle ton code de réglages :'); if (!c) return; try { const o = JSON.parse(c); Object.keys(DEF).forEach(k => { if (k in o && typeof o[k] === typeof DEF[k]) S[k] = o[k]; }); apply(); sync(); } catch (e) { alert('Code invalide.'); } });
   dr.appendChild(ex); dr.appendChild(im); dr.appendChild(rs); dr.appendChild(mk('p', 'hint', 'Tes choix sont enregistrés sur cet appareil.'));
-  dr.addEventListener('input', e => { const t = e.target, k = t.dataset.k; if (!k) return; S[k] = t.type === 'checkbox' ? t.checked : t.type === 'range' ? +t.value : t.value; apply(); });
+  const onIn = e => { const t = e.target, k = t.dataset.k; if (!k || (t.type === 'text' && e.type === 'input')) return; S[k] = t.type === 'checkbox' ? t.checked : t.type === 'range' ? +t.value : t.value; apply(); };
+  dr.addEventListener('input', onIn); dr.addEventListener('change', onIn);
 
   const sync = () => {
     const cs = getComputedStyle(root);
